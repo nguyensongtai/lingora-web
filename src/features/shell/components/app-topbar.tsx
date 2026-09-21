@@ -1,24 +1,41 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { navTitle } from "../nav";
 
+import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
 
-export function AppTopbar() {
+export function AppTopbar({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
 
   return (
-    <header className="bg-background sticky top-0 z-10 flex h-15 items-center gap-2 px-4 app:px-8">
+    <header className="bg-background app:px-8 sticky top-0 z-10 flex h-15 items-center gap-2 px-4">
       <div className="app:hidden flex flex-1 items-center gap-2">
-        <span className="bg-brand grid size-6.5 place-items-center rounded-[7px] text-sm font-bold text-white">
-          L
-        </span>
+        <Image
+          src="/brand/lingora-mark.png"
+          alt=""
+          width={28}
+          height={28}
+          style={{ width: 28, height: 28 }}
+          priority
+        />
         <span className="text-base font-bold">{navTitle(pathname)}</span>
       </div>
       <div className="max-app:hidden flex-1" />
       <ThemeToggle />
+      {/* Sidebar giữ nút đăng xuất trên desktop; mobile không có sidebar. */}
+      {signedIn ? <MobileSignOut /> : null}
     </header>
+  );
+}
+
+function MobileSignOut() {
+  return (
+    <span className="app:hidden">
+      <SignOutButton />
+    </span>
   );
 }

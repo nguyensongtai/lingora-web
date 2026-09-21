@@ -2,12 +2,10 @@ import Link from "next/link";
 import { LogIn } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { ROLE_LABELS } from "@/features/auth/types";
 import { initialsOf, readCurrentUser } from "@/lib/auth/current-user";
 
-const ROLE_LABELS = {
-  admin: "Quản trị viên",
-  student: "Học viên",
-} as const;
+import { SignOutButton } from "./sign-out-button";
 
 export async function AccountBadge() {
   const user = await readCurrentUser();
@@ -29,7 +27,7 @@ export async function AccountBadge() {
       <span className="bg-secondary grid size-8 flex-none place-items-center rounded-full text-xs font-semibold">
         {initialsOf(user.display_name)}
       </span>
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">
           {user.display_name}
         </span>
@@ -37,6 +35,7 @@ export async function AccountBadge() {
           {ROLE_LABELS[user.role]}
         </span>
       </span>
+      <SignOutButton />
     </div>
   );
 }

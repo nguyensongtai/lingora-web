@@ -8,19 +8,14 @@ import { cn } from "@/lib/utils";
 
 import { NAV_ITEMS, isActive } from "../nav";
 
+import { Wordmark } from "./wordmark";
+
 export function AppSidebar({ account }: { account: ReactNode }) {
   const pathname = usePathname();
 
   return (
     <aside className="border-border max-app:hidden sticky top-0 flex h-screen w-58 flex-none flex-col gap-1 border-r p-6 px-4">
-      <Link href="/" className="flex items-center gap-2.5 px-2 pb-6">
-        <span className="bg-brand grid size-7 place-items-center rounded-lg text-[15px] font-bold text-white">
-          L
-        </span>
-        <span className="text-foreground text-[17px] font-bold tracking-tight">
-          Lingora
-        </span>
-      </Link>
+      <Wordmark className="px-2 pb-6" />
 
       <nav className="flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {

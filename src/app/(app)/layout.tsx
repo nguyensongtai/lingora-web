@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 
+import { hasSession } from "@/lib/auth/session";
+
 import {
   AccountBadge,
   AccountBadgeSkeleton,
@@ -20,10 +22,17 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         }
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <AppTopbar />
+        {/* hasSession đọc cookie nên topbar cũng phải nằm trong Suspense. */}
+        <Suspense fallback={<AppTopbar signedIn={false} />}>
+          <SessionAwareTopbar />
+        </Suspense>
         {children}
         <MobileNav />
       </div>
     </div>
   );
+}
+
+async function SessionAwareTopbar() {
+  return <AppTopbar signedIn={await hasSession()} />;
 }
