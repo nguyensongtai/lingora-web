@@ -14,6 +14,8 @@ import {
   UnitTimeline,
   type Unit,
 } from "@/features/learn/components/unit-timeline";
+import { readProgress } from "@/features/progress/server";
+import { readCurrentUser } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = {
   title: "Lộ trình học",
@@ -53,10 +55,11 @@ async function LearningPath({
   searchParams: PageProps<"/learn">["searchParams"];
 }) {
   const requested = parseLevel((await searchParams).level);
-  const published = await fetchCourses({
-    status: "published",
-    page_size: MAX_COURSES,
-  });
+  const [published, progress, user] = await Promise.all([
+    fetchCourses({ status: "published", page_size: MAX_COURSES }),
+    readProgress(),
+    readCurrentUser(),
+  ]);
 
   const counts = countByLevel(published.items);
   // Không có bậc nào trên URL thì mở bậc thấp nhất đang có khoá, để trang
@@ -86,7 +89,12 @@ async function LearningPath({
           Bậc {active} · {LEVEL_LABELS[active]} chưa có khoá nào được xuất bản.
         </p>
       ) : (
-        <UnitTimeline units={units} />
+        <UnitTimeline
+          units={units}
+          initialProgress={progress}
+          canTrack={user !== null}
+          level={active}
+        />
       )}
     </>
   );

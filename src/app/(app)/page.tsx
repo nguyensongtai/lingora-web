@@ -3,9 +3,19 @@ import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCourseLessons, fetchCourses } from "@/features/course/api";
-import { COURSE_LEVELS, type Course, type CourseLevel } from "@/features/course/types";
+import {
+  COURSE_LEVELS,
+  type Course,
+  type CourseLevel,
+  type Lesson,
+} from "@/features/course/types";
 import { LevelStrip } from "@/features/learn/components/level-strip";
 import { StartCard } from "@/features/learn/components/start-card";
+import { readProgress } from "@/features/progress/server";
+import {
+  completedSetOf,
+  type ProgressSnapshot,
+} from "@/features/progress/types";
 import { readCurrentUser } from "@/lib/auth/current-user";
 
 const MAX_COURSES = 100;
@@ -22,14 +32,17 @@ export default function HomePage() {
 }
 
 async function HomeContent() {
-  const [user, published] = await Promise.all([
+  const [user, published, progress] = await Promise.all([
     readCurrentUser(),
     fetchCourses({ status: "published", page_size: MAX_COURSES }),
+    readProgress(),
   ]);
 
   const counts = countByLevel(published.items);
-  const starter = pickStarter(published.items);
-  const lessons = starter ? (await fetchCourseLessons(starter.id)).items : [];
+  const completed = completedSetOf(progress);
+  const featured = pickFeatured(published.items, progress);
+  const lessons = featured ? (await fetchCourseLessons(featured.id)).items : [];
+  const doneCount = lessons.filter((lesson) => completed.has(lesson.id)).length;
 
   return (
     <>
@@ -44,7 +57,14 @@ async function HomeContent() {
         </p>
       </div>
 
-      {starter ? <StartCard course={starter} lessons={lessons} /> : null}
+      {featured ? (
+        <StartCard
+          course={featured}
+          lessons={lessons}
+          doneCount={doneCount}
+          nextLesson={firstUnfinished(lessons, completed)}
+        />
+      ) : null}
 
       <LevelStrip counts={counts} />
 
@@ -61,17 +81,45 @@ async function HomeContent() {
 }
 
 /**
- * Khoá mở màn là khoá cũ nhất của bậc thấp nhất đang có bài — không phải "bài
- * đang học dở" như design, vì chưa có tiến độ nào để biết điều đó.
+ * Khoá được nêu trên trang chủ, theo đúng thứ tự người học mong đợi khi bấm
+ * "tiếp tục": khoá đang học dở → khoá còn dở sớm nhất trong lộ trình → khoá mở
+ * màn. Số dở/xong lấy từ snapshot nên không phải gọi thêm lần nào.
  */
-function pickStarter(courses: Course[]): Course | undefined {
-  for (const level of COURSE_LEVELS) {
-    const ofLevel = courses.filter((course) => course.level === level);
-    if (ofLevel.length > 0) {
-      return ofLevel[ofLevel.length - 1];
-    }
+function pickFeatured(
+  courses: Course[],
+  progress: ProgressSnapshot,
+): Course | undefined {
+  const unfinished = new Set(
+    progress.courses
+      .filter((course) => course.completed_count < course.lesson_count)
+      .map((course) => course.course_id),
+  );
+
+  const latest = courses.find(
+    (course) =>
+      course.id === progress.latest_course_id && unfinished.has(course.id),
+  );
+  if (latest) {
+    return latest;
   }
-  return undefined;
+
+  const byPath = orderedByPath(courses);
+  return byPath.find((course) => unfinished.has(course.id)) ?? byPath[0];
+}
+
+/** Khoá xếp theo bậc tăng dần, trong mỗi bậc thì khoá tạo trước đứng trước. */
+function orderedByPath(courses: Course[]): Course[] {
+  return COURSE_LEVELS.flatMap((level) =>
+    courses.filter((course) => course.level === level).reverse(),
+  );
+}
+
+/** Bài chưa đánh dấu xong đầu tiên; undefined khi khoá đã xong hết. */
+function firstUnfinished(
+  lessons: Lesson[],
+  completed: Set<string>,
+): Lesson | undefined {
+  return lessons.find((lesson) => !completed.has(lesson.id));
 }
 
 function countByLevel(courses: Course[]): Record<CourseLevel, number> {
