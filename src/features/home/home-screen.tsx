@@ -20,7 +20,7 @@ import { readCurrentUser } from "@/lib/auth/current-user";
 
 const MAX_COURSES = 100;
 
-export default function HomePage() {
+export function HomeScreen() {
   return (
     <main className="mx-auto flex w-full max-w-240 flex-1 flex-col gap-8 px-4 pt-1 pb-24 app:px-8 app:pt-2 app:pb-16">
       {/* Cookie và danh sách khoá đều là dữ liệu động: Cache Components bắt buộc Suspense. */}

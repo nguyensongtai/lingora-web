@@ -20,7 +20,16 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1"
  * Nhánh bắt buộc phải có phiên. Những đường còn lại trong matcher chỉ ghé qua
  * để gia hạn token nếu có — khách chưa đăng nhập vẫn xem được trang.
  */
-const PROTECTED_PREFIXES = ["/admin", "/api/admin"];
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/api/admin",
+  "/learn",
+  "/practice",
+  "/vocabulary",
+  "/progress",
+  "/tutor",
+  "/courses",
+];
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -98,11 +107,16 @@ function rejectUnauthenticated(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Khu vực quản trị, cộng những trang đọc tiến độ của người đang đăng nhập —
-  // các trang đó cần access token còn hạn, nhưng không cấm khách vào xem.
+  // Toàn bộ khu vực học nằm sau đăng nhập, đúng như design. Riêng "/" chỉ ghé
+  // qua để gia hạn token: trang đó tự chọn giữa giới thiệu và màn hình học.
   matcher: [
     "/",
     "/learn",
+    "/practice",
+    "/vocabulary",
+    "/progress",
+    "/tutor",
+    "/courses/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
     "/api/me/:path*",
