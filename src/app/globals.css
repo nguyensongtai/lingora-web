@@ -60,6 +60,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   /* Bo góc của thẻ lớn trong design là 16px, không nằm trên thang trên. */
   --radius-card: 1rem;
+
+  /* Design đổi sidebar sang thanh dưới ở 900px, không trùng breakpoint nào của Tailwind. */
+  --breakpoint-app: 56.25rem;
 }
 
 /*
