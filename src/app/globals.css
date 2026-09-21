@@ -39,6 +39,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Màu ngữ nghĩa riêng của Lingora, ngoài bộ biến chuẩn của shadcn. */
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,75 +58,104 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Bo góc của thẻ lớn trong design là 16px, không nằm trên thang trên. */
+  --radius-card: 1rem;
 }
 
+/*
+ * Giá trị lấy nguyên từ bảng token của design (Lingora App.dc.html) nên giữ
+ * dạng hex: đổi sang oklch sẽ làm lệch vài bậc và mất khả năng đối chiếu.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #f7f5f2;
+  --foreground: #1a1917;
+  --card: #ffffff;
+  --card-foreground: #1a1917;
+  --popover: #ffffff;
+  --popover-foreground: #1a1917;
+  --primary: #e8600f;
+  --primary-foreground: #ffffff;
+  --secondary: #eeeae4;
+  --secondary-foreground: #1a1917;
+  --muted: #eeeae4;
+  --muted-foreground: #6b665f;
+  --accent: #eeeae4;
+  --accent-foreground: #1a1917;
+  --destructive: #d63939;
+  --border: #e7e2db;
+  --input: #e7e2db;
+  --ring: #e8600f;
+
+  --brand: #e8600f;
+  --brand-strong: #b84a08;
+  --brand-soft: #fdeee3;
+  --success: #2f9e44;
+  --success-soft: #e8f5ea;
+  --warning: #c98a0a;
+  --warning-soft: #fdf3dc;
+  --danger: #d63939;
+  --danger-soft: #fdeaea;
+
+  --chart-1: #e8600f;
+  --chart-2: #2f9e44;
+  --chart-3: #c98a0a;
+  --chart-4: #b84a08;
+  --chart-5: #6b665f;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #f7f5f2;
+  --sidebar-foreground: #1a1917;
+  --sidebar-primary: #e8600f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eeeae4;
+  --sidebar-accent-foreground: #1a1917;
+  --sidebar-border: #e7e2db;
+  --sidebar-ring: #e8600f;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #141311;
+  --foreground: #f3f1ed;
+  --card: #1d1b19;
+  --card-foreground: #f3f1ed;
+  --popover: #1d1b19;
+  --popover-foreground: #f3f1ed;
+  --primary: #e8600f;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2723;
+  --secondary-foreground: #f3f1ed;
+  --muted: #2a2723;
+  --muted-foreground: #a39d94;
+  --accent: #2a2723;
+  --accent-foreground: #f3f1ed;
+  --destructive: #e05656;
+  --border: #302c27;
+  --input: #302c27;
+  --ring: #e8600f;
+
+  --brand: #e8600f;
+  /* Nền tối cần chữ sáng hơn PT của bản sáng mới đủ tương phản. */
+  --brand-strong: #f0813d;
+  --brand-soft: #3a2416;
+  --success: #4cb95e;
+  --success-soft: #17301c;
+  --warning: #e0a52a;
+  --warning-soft: #3a2e12;
+  --danger: #e05656;
+  --danger-soft: #3a1a1a;
+
+  --chart-1: #e8600f;
+  --chart-2: #4cb95e;
+  --chart-3: #e0a52a;
+  --chart-4: #f0813d;
+  --chart-5: #a39d94;
+  --sidebar: #141311;
+  --sidebar-foreground: #f3f1ed;
+  --sidebar-primary: #e8600f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a2723;
+  --sidebar-accent-foreground: #f3f1ed;
+  --sidebar-border: #302c27;
+  --sidebar-ring: #e8600f;
 }
 
 @layer base {
@@ -125,6 +166,6 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans antialiased;
   }
 }
