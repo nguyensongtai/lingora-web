@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# lingora-web
 
-## Getting Started
+Frontend của Lingora — web app học tiếng Anh. Backend nằm ở repo
+[lingora-api](https://github.com/nguyensongtai/lingora-api).
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router, Cache Components, Turbopack), TypeScript
+strict, Tailwind v4, shadcn/ui, TanStack Query (server state), Zustand (UI state).
+
+## Chạy local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Cần `lingora-api` chạy sẵn ở `http://localhost:8080` (biến `NEXT_PUBLIC_API_URL`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Sinh type từ OpenAPI
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Spec do `lingora-api` sở hữu; repo này giữ một bản copy trong `openapi/`.
 
-## Learn More
+```bash
+pnpm api:spec       # tải openapi.yaml mới nhất từ lingora-api
+pnpm api:types      # sinh src/lib/api/schema.d.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Layout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                   # route App Router, Server Component mặc định
+├── components/ui/         # shadcn/ui
+├── features/<domain>/     # components/, hooks/, api.ts, types.ts
+└── lib/                   # api client, query client
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`"use client"` chỉ dùng khi cần tương tác. Zustand chỉ giữ UI/session state,
+không cache dữ liệu API — việc đó là của TanStack Query.
 
-## Deploy on Vercel
+## Script
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Lệnh | Việc |
+| --- | --- |
+| `pnpm dev` | dev server (Turbopack) |
+| `pnpm build` | production build |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm lint` | eslint |

@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "api:types": "openapi-typescript ../api/openapi.yaml -o ./src/lib/api/schema.d.ts"
+    "typecheck": "next typegen && tsc --noEmit",
+    "api:types": "openapi-typescript openapi/openapi.yaml -o src/lib/api/schema.d.ts",
+    "api:spec": "curl -fsSL https://raw.githubusercontent.com/nguyensongtai/lingora-api/main/openapi.yaml -o openapi/openapi.yaml"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.1",
