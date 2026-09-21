@@ -44,3 +44,13 @@ export const STATUS_LABELS: Record<CourseStatus, string> = {
   draft: "Nháp",
   published: "Đã xuất bản",
 };
+
+/** Tên tiếng Anh của từng bậc CEFR, hiển thị mờ dưới mã bậc như trong design. */
+export const LEVEL_SUBTITLES: Record<CourseLevel, string> = {
+  A1: "Beginner",
+  A2: "Elementary",
+  B1: "Intermediate",
+  B2: "Upper-Int.",
+  C1: "Advanced",
+  C2: "Proficient",
+};
