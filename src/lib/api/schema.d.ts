@@ -155,6 +155,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/courses/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Sắp xếp khoá học trong một bậc
+         * @description `course_ids` phải là đúng tập khoá hiện có của bậc đó. Thiếu, thừa hay
+         *     trùng đều bị từ chối, vì một lần sắp xếp thiếu khoá sẽ để lại những khoá
+         *     mang thứ tự cũ lẫn vào giữa.
+         */
+        put: operations["reorderCourses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/courses/{courseId}": {
         parameters: {
             query?: never;
@@ -575,6 +597,11 @@ export interface components {
             status: components["schemas"]["CourseStatus"];
             /** Format: uri */
             cover_image_url: string | null;
+            /**
+             * Format: int32
+             * @description Thứ tự trong bậc, do người soạn đặt.
+             */
+            position: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -593,6 +620,11 @@ export interface components {
             status?: components["schemas"]["CourseStatus"];
             /** Format: uri */
             cover_image_url?: string | null;
+        };
+        CourseOrder: {
+            level: components["schemas"]["CourseLevel"];
+            /** @description Toàn bộ id khoá của bậc đó, theo thứ tự mong muốn. */
+            course_ids: string[];
         };
         CourseUpdate: {
             slug?: string;
@@ -634,7 +666,7 @@ export interface components {
         };
         Error: {
             /** @enum {string} */
-            code: "validation_error" | "malformed_body" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "internal_error";
+            code: "validation_error" | "malformed_body" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "internal_error";
             /** @description Câu thông báo tiếng Việt, hiển thị được cho người dùng. */
             message: string;
             /** @description Lỗi theo từng field, chỉ có với validation_error. */
@@ -695,6 +727,17 @@ export interface components {
         };
     };
     responses: {
+        /** @description Thử quá nhiều lần; header Retry-After cho biết phải chờ bao lâu. */
+        TooManyRequests: {
+            headers: {
+                /** @description Số giây còn phải chờ. */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Dữ liệu vào không hợp lệ */
         BadRequest: {
             headers: {
@@ -780,6 +823,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     register: {
@@ -806,6 +850,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             409: components["responses"]["Conflict"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     signInWithGoogle: {
@@ -833,6 +878,7 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             409: components["responses"]["Conflict"];
+            429: components["responses"]["TooManyRequests"];
             /** @description Đăng nhập Google chưa được bật trên máy chủ */
             503: {
                 headers: {
@@ -971,6 +1017,31 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    reorderCourses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CourseOrder"];
+            };
+        };
+        responses: {
+            /** @description Đã sắp xếp */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getCourse: {

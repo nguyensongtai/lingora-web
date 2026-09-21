@@ -3,6 +3,7 @@ import { ApiError, apiClient, unwrap, type ApiErrorBody } from "@/lib/api/client
 import type {
   Course,
   CourseCreate,
+  CourseLevel,
   CourseList,
   CourseUpdate,
   Lesson,
@@ -135,6 +136,17 @@ export function updateLesson(
 
 export function deleteLesson(lessonId: string): Promise<void> {
   return callAdmin<void>(`/api/admin/lessons/${lessonId}`, { method: "DELETE" });
+}
+
+/** courseIds phải là toàn bộ khoá của bậc đó, theo thứ tự mong muốn. */
+export function reorderCourses(
+  level: CourseLevel,
+  courseIds: string[],
+): Promise<void> {
+  return callAdmin<void>("/api/admin/courses/order", {
+    method: "PUT",
+    body: JSON.stringify({ level, course_ids: courseIds }),
+  });
 }
 
 /** lessonIds phải là toàn bộ bài của khoá, theo thứ tự mong muốn. */

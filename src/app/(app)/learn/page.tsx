@@ -69,9 +69,9 @@ async function LearningPath({
 
   const courses = published.items
     .filter((course) => course.level === active)
-    // API trả mới nhất trước; lộ trình thì đi từ khoá cũ nhất. Khoá học chưa có
-    // trường thứ tự riêng nên ngày tạo là thứ tự duy nhất đang có.
-    .reverse();
+    // Danh sách trả về theo thứ tự phân trang (mới nhất trước); lộ trình thì đi
+    // theo position do người soạn đặt.
+    .sort((a, b) => a.position - b.position);
 
   const units: Unit[] = await Promise.all(
     courses.map(async (course) => ({

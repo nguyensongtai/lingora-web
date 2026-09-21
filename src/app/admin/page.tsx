@@ -5,8 +5,16 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CourseMoveButtons } from "@/features/course/components/course-move-buttons";
 import { DeleteCourseButton } from "@/features/course/components/delete-course-button";
-import { LEVEL_LABELS, STATUS_LABELS, type CourseList } from "@/features/course/types";
+import {
+  COURSE_LEVELS,
+  LEVEL_LABELS,
+  STATUS_LABELS,
+  type Course,
+  type CourseLevel,
+  type CourseList,
+} from "@/features/course/types";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { serverFetch } from "@/lib/api/server-client";
 
@@ -48,6 +56,18 @@ async function CourseTable() {
     );
   }
 
+  // Thứ tự hiển thị phải giống lộ trình người học thấy: theo bậc, rồi theo
+  // position trong bậc. Hai nút ↑/↓ chỉ có nghĩa khi hàng đứng đúng thứ tự đó.
+  const byLevel = new Map<CourseLevel, Course[]>();
+  for (const level of COURSE_LEVELS) {
+    const ofLevel = page.items
+      .filter((course) => course.level === level)
+      .sort((a, b) => a.position - b.position);
+    if (ofLevel.length > 0) {
+      byLevel.set(level, ofLevel);
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <table className="w-full text-sm">
@@ -61,7 +81,8 @@ async function CourseTable() {
           </tr>
         </thead>
         <tbody className="divide-border divide-y">
-          {page.items.map((course) => (
+          {[...byLevel].flatMap(([level, courses]) =>
+            courses.map((course, index) => (
             <tr key={course.id}>
               <td className="px-4 py-3">
                 <Link href={`/courses/${course.id}`} className="hover:underline">
@@ -80,6 +101,11 @@ async function CourseTable() {
                 {course.slug}
               </td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
+                <CourseMoveButtons
+                  level={level}
+                  courseIds={courses.map((item) => item.id)}
+                  index={index}
+                />
                 <Button asChild variant="ghost" size="sm">
                   <Link href={`/admin/courses/${course.id}/lessons`}>Bài học</Link>
                 </Button>
@@ -89,7 +115,8 @@ async function CourseTable() {
                 <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
               </td>
             </tr>
-          ))}
+            )),
+          )}
         </tbody>
       </table>
     </div>

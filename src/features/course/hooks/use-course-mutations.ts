@@ -3,8 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { createCourse, deleteCourse, updateCourse } from "../api";
-import type { CourseCreate, CourseUpdate } from "../types";
+import { createCourse, deleteCourse, reorderCourses, updateCourse } from "../api";
+import type { CourseCreate, CourseLevel, CourseUpdate } from "../types";
 import { courseKeys } from "./query-keys";
 
 /**
@@ -49,5 +49,21 @@ export function useDeleteCourse() {
   return useMutation({
     mutationFn: (courseId: string) => deleteCourse(courseId),
     onSuccess: (_result, courseId) => invalidate(courseId),
+  });
+}
+
+/** courseIds phải là toàn bộ khoá của bậc đó, theo thứ tự mong muốn. */
+export function useReorderCourses() {
+  const invalidate = useCourseInvalidation();
+
+  return useMutation({
+    mutationFn: ({
+      level,
+      courseIds,
+    }: {
+      level: CourseLevel;
+      courseIds: string[];
+    }) => reorderCourses(level, courseIds),
+    onSuccess: () => invalidate(),
   });
 }

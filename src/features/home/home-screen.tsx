@@ -111,10 +111,12 @@ function pickFeatured(
   return byPath.find((course) => unfinished.has(course.id)) ?? byPath[0];
 }
 
-/** Khoá xếp theo bậc tăng dần, trong mỗi bậc thì khoá tạo trước đứng trước. */
+/** Khoá xếp theo bậc tăng dần, trong mỗi bậc thì theo position người soạn đặt. */
 function orderedByPath(courses: Course[]): Course[] {
   return COURSE_LEVELS.flatMap((level) =>
-    courses.filter((course) => course.level === level).reverse(),
+    courses
+      .filter((course) => course.level === level)
+      .sort((a, b) => a.position - b.position),
   );
 }
 
