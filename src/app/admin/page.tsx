@@ -81,6 +81,9 @@ async function CourseTable() {
               </td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
                 <Button asChild variant="ghost" size="sm">
+                  <Link href={`/admin/courses/${course.id}/lessons`}>Bài học</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
                   <Link href={`/admin/courses/${course.id}/edit`}>Sửa</Link>
                 </Button>
                 <DeleteCourseButton courseId={course.id} courseTitle={course.title} />
