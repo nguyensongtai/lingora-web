@@ -1,5 +1,5 @@
 /**
- * Hằng số và tuỳ chọn cookie phiên. Tách riêng khỏi session.ts vì middleware
+ * Hằng số và tuỳ chọn cookie phiên. Tách riêng khỏi session.ts vì proxy
  * chạy ở edge runtime, không import được "server-only" hay next/headers.
  */
 export const ACCESS_TOKEN_COOKIE = "lingora_at";

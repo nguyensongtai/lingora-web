@@ -16,10 +16,10 @@ type TokenPair = {
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1";
 
 /**
- * Middleware là nơi duy nhất làm mới được phiên: Server Component không set
- * cookie được, nên access token phải được bảo đảm còn hạn trước khi trang chạy.
+ * Proxy là nơi duy nhất làm mới được phiên: Server Component không set cookie
+ * được, nên access token phải được bảo đảm còn hạn trước khi trang chạy.
  */
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 

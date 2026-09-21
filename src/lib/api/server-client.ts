@@ -8,8 +8,8 @@ import { apiBaseUrl } from "./client";
  * serverFetch gọi API kèm access token lấy từ cookie. Chỉ dùng trong Server
  * Component và Route Handler — token không bao giờ đi xuống trình duyệt.
  *
- * Việc làm mới token là của middleware: Server Component không set cookie được,
- * nên tới lúc nó chạy thì access token đã được middleware bảo đảm còn hạn.
+ * Việc làm mới token là của proxy: Server Component không set cookie được,
+ * nên tới lúc nó chạy thì access token đã được proxy bảo đảm còn hạn.
  */
 export async function serverFetch(
   path: string,
