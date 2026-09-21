@@ -46,6 +46,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đăng nhập bằng Google
+         * @description Đổi authorization code của Google lấy phiên Lingora. `redirect_uri` phải
+         *     khớp với cái đã dùng lúc chuyển hướng sang Google.
+         *
+         *     Tài khoản Google đã gắn thì đăng nhập thẳng; chưa gắn mà email đã có
+         *     tài khoản Lingora thì được gắn vào tài khoản đó; chưa có gì thì tạo mới
+         *     với vai trò `student`. Email chưa được Google xác minh bị từ chối.
+         *
+         *     Trả 503 khi máy chủ chưa được cấu hình GOOGLE_CLIENT_ID và
+         *     GOOGLE_CLIENT_SECRET.
+         */
+        post: operations["signInWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -290,6 +318,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vocabulary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Danh sách từ vựng của một bài */
+        get: operations["listVocabulary"];
+        put?: never;
+        /** Thêm một từ vào bài */
+        post: operations["createVocabularyEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vocabulary/{entryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entryId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Xoá mềm một từ */
+        delete: operations["deleteVocabularyEntry"];
+        options?: never;
+        head?: never;
+        /** Cập nhật một phần của từ */
+        patch: operations["updateVocabularyEntry"];
+        trace?: never;
+    };
+    "/me/vocabulary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Từ vựng đã mở khoá của người đang đăng nhập
+         * @description Chỉ gồm từ thuộc những bài người này đã đánh dấu hoàn thành. Chưa ôn lần
+         *     nào thì `review` là `null` và `state` là `due`.
+         */
+        get: operations["listMyVocabulary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/vocabulary/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bốn ô thống kê của màn Từ vựng */
+        get: operations["getVocabularyStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/vocabulary/{entryId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entryId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ghi nhận một lần ôn
+         * @description Tính lịch tiếp theo theo SM-2. Từ thuộc bài chưa hoàn thành bị từ chối
+         *     với 403.
+         */
+        post: operations["reviewVocabularyEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -315,6 +442,95 @@ export interface components {
              */
             password: string;
             display_name: string;
+        };
+        GoogleSignInRequest: {
+            /** @description Authorization code Google trả về. */
+            code: string;
+            /** @description Đúng redirect_uri đã dùng ở bước chuyển hướng. */
+            redirect_uri: string;
+        };
+        /**
+         * @description `due` đến hạn ôn (kể cả từ chưa ôn lần nào), `learning` đang học,
+         *     `mastered` khoảng cách ôn đã từ 21 ngày trở lên.
+         * @enum {string}
+         */
+        VocabularyState: "due" | "learning" | "mastered";
+        VocabularyEntry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            lesson_id: string;
+            word: string;
+            ipa: string;
+            meaning: string;
+            example: string;
+            example_vi: string;
+            /** Format: int32 */
+            position: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        VocabularyEntryCreate: {
+            /** Format: uuid */
+            lesson_id: string;
+            word: string;
+            ipa?: string;
+            meaning: string;
+            example?: string;
+            example_vi?: string;
+        };
+        VocabularyEntryUpdate: {
+            word?: string;
+            ipa?: string;
+            meaning?: string;
+            example?: string;
+            example_vi?: string;
+        };
+        VocabularyEntryList: {
+            items: components["schemas"]["VocabularyEntry"][];
+        };
+        VocabularyReview: {
+            /** Format: double */
+            ease_factor: number;
+            /** Format: int32 */
+            interval_days: number;
+            /** Format: int32 */
+            repetitions: number;
+            /** Format: date */
+            due_on: string;
+            /** Format: date-time */
+            last_reviewed_at: string;
+        };
+        VocabularyCard: {
+            entry: components["schemas"]["VocabularyEntry"];
+            level: components["schemas"]["CourseLevel"];
+            state: components["schemas"]["VocabularyState"];
+            /**
+             * Format: int32
+             * @description Số đốt sáng trên vạch 5 đốt.
+             */
+            familiarity: number;
+            /** @description `null` khi người học chưa ôn từ này lần nào. */
+            review: components["schemas"]["VocabularyReview"] | null;
+        };
+        VocabularyCardList: {
+            items: components["schemas"]["VocabularyCard"][];
+        };
+        VocabularyStats: {
+            /** Format: int64 */
+            learned: number;
+            /** Format: int64 */
+            due_today: number;
+            /** Format: int64 */
+            mastered: number;
+            /** Format: int64 */
+            new_this_week: number;
+        };
+        VocabularyReviewRequest: {
+            /** @enum {string} */
+            grade: "remembered" | "forgot";
         };
         LoginRequest: {
             /** Format: email */
@@ -590,6 +806,42 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    signInWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignInRequest"];
+            };
+        };
+        responses: {
+            /** @description Phiên đăng nhập */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            /** @description Đăng nhập Google chưa được bật trên máy chủ */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     refreshSession: {
@@ -1050,6 +1302,187 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    listVocabulary: {
+        parameters: {
+            query: {
+                lesson_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Từ của bài, theo thứ tự position */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyEntryList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    createVocabularyEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VocabularyEntryCreate"];
+            };
+        };
+        responses: {
+            /** @description Từ vừa thêm */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyEntry"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    deleteVocabularyEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xoá */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateVocabularyEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VocabularyEntryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Từ sau khi cập nhật */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyEntry"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listMyVocabulary: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["VocabularyState"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Danh sách thẻ từ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyCardList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getVocabularyStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thống kê */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyStats"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    reviewVocabularyEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VocabularyReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Lịch ôn sau lần này */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyReview"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
 }
