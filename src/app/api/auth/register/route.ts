@@ -8,9 +8,8 @@ import { writeSession } from "@/lib/auth/session";
 type TokenPair = components["schemas"]["TokenPair"];
 
 /**
- * Đổi email/mật khẩu lấy phiên. Token do API trả về được cất vào httpOnly
- * cookie ngay tại đây và không bao giờ đi tiếp xuống trình duyệt — response chỉ
- * mang thông tin tài khoản.
+ * Tạo tài khoản rồi mở phiên ngay. Giống /api/auth/login, token ở lại phía
+ * server và response chỉ mang thông tin tài khoản.
  */
 export async function POST(request: Request): Promise<NextResponse> {
   let body: unknown;
@@ -23,16 +22,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  // remember là lựa chọn của trình duyệt, không phải của API: tách ra trước
-  // khi chuyển tiếp, nếu không API sẽ từ chối vì có field lạ.
-  const { remember = true, ...credentials } = (body ?? {}) as {
-    remember?: boolean;
-  };
-
-  const upstream = await fetch(`${apiBaseUrl}/auth/login`, {
+  const upstream = await fetch(`${apiBaseUrl}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
 
@@ -46,13 +39,13 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const pair = (await upstream.json()) as TokenPair;
 
+  // Người vừa tạo tài khoản thì mặc định nhớ phiên: họ chưa có dịp chọn.
   await writeSession({
     accessToken: pair.access_token,
     refreshToken: pair.refresh_token,
     expiresIn: pair.expires_in,
-    persist: remember !== false,
+    persist: true,
   });
 
-  // Chỉ trả tài khoản: token ở lại phía server.
-  return NextResponse.json(pair.user);
+  return NextResponse.json(pair.user, { status: 201 });
 }

@@ -1,6 +1,6 @@
 import { ApiError, type ApiErrorBody } from "@/lib/api/client";
 
-import type { LoginRequest, User } from "./types";
+import type { LoginInput, RegisterRequest, User } from "./types";
 
 /**
  * Client chỉ nói chuyện với Route Handler của Next, không bao giờ gọi thẳng API.
@@ -23,10 +23,17 @@ async function callBff<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function login(credentials: LoginRequest): Promise<User> {
+export function login(credentials: LoginInput): Promise<User> {
   return callBff<User>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+}
+
+export function register(input: RegisterRequest): Promise<User> {
+  return callBff<User>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 

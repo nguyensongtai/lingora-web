@@ -2,9 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   ACCESS_TOKEN_COOKIE,
+  PERSIST_COOKIE,
   REFRESH_TOKEN_COOKIE,
-  REFRESH_TOKEN_MAX_AGE,
   cookieOptions,
+  refreshMaxAge,
 } from "@/lib/auth/cookies";
 
 type TokenPair = {
@@ -68,10 +69,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     pair.access_token,
     cookieOptions(pair.expires_in),
   );
+  // Gia hạn không được âm thầm biến cookie phiên thành cookie lâu dài, nên
+  // lựa chọn "ghi nhớ đăng nhập" phải đọc lại từ cookie đánh dấu.
+  const persist = request.cookies.get(PERSIST_COOKIE)?.value === "1";
   response.cookies.set(
     REFRESH_TOKEN_COOKIE,
     pair.refresh_token,
-    cookieOptions(REFRESH_TOKEN_MAX_AGE),
+    cookieOptions(refreshMaxAge(persist)),
   );
   return response;
 }

@@ -25,6 +25,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tạo tài khoản học viên
+         * @description Tạo tài khoản rồi đăng nhập luôn: trả về đúng cặp token như /auth/login.
+         *     Vai trò luôn là `student`; không có cách nào tự nhận quyền admin.
+         */
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -285,6 +306,16 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        RegisterRequest: {
+            /** Format: email */
+            email: string;
+            /**
+             * Format: password
+             * @description Tối thiểu 12 ký tự.
+             */
+            password: string;
+            display_name: string;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -503,6 +534,32 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Tài khoản mới kèm cặp token */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     refreshSession: {
