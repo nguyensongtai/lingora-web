@@ -11,6 +11,7 @@ import {
 } from "@/features/course/types";
 import { LevelStrip } from "@/features/learn/components/level-strip";
 import { StartCard } from "@/features/learn/components/start-card";
+import { TodayCard } from "@/features/progress/components/today-card";
 import { readProgress } from "@/features/progress/server";
 import {
   completedSetOf,
@@ -57,14 +58,17 @@ async function HomeContent() {
         </p>
       </div>
 
-      {featured ? (
-        <StartCard
-          course={featured}
-          lessons={lessons}
-          doneCount={doneCount}
-          nextLesson={firstUnfinished(lessons, completed)}
-        />
-      ) : null}
+      <div className="grid gap-4 min-[1100px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        {featured ? (
+          <StartCard
+            course={featured}
+            lessons={lessons}
+            doneCount={doneCount}
+            nextLesson={firstUnfinished(lessons, completed)}
+          />
+        ) : null}
+        {user ? <TodayCard initialProgress={progress} /> : null}
+      </div>
 
       <LevelStrip counts={counts} />
 

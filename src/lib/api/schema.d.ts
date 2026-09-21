@@ -437,6 +437,12 @@ export interface components {
             /** Format: int64 */
             completed_count: number;
         };
+        DayActivity: {
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            completed_lessons: number;
+        };
         ProgressSnapshot: {
             courses: components["schemas"]["CourseProgress"][];
             /** @description Id các bài đã đánh dấu xong, mới nhất trước. */
@@ -446,6 +452,30 @@ export interface components {
              * @description Khoá được học gần đây nhất; `null` khi chưa học bài nào.
              */
             latest_course_id: string | null;
+            /**
+             * Format: int64
+             * @description XP đã đạt hôm nay, tính theo giờ Việt Nam.
+             */
+            today_xp: number;
+            /**
+             * Format: int64
+             * @description Mục tiêu XP mỗi ngày.
+             */
+            goal_xp: number;
+            /**
+             * Format: int64
+             * @description XP cho mỗi bài hoàn thành. Có mặt để phía trước cộng trừ được ngay
+             *     khi người học bấm, mà không phải viết cứng lại con số của server.
+             */
+            xp_per_lesson: number;
+            /**
+             * Format: int64
+             * @description Số ngày học liên tiếp. Vẫn giữ nguyên khi hôm nay chưa học nhưng
+             *     hôm qua có — người học còn nguyên hôm nay để nối tiếp.
+             */
+            streak_days: number;
+            /** @description Bảy ngày gần nhất, cũ trước mới sau; ngày không học vẫn có mặt. */
+            week: components["schemas"]["DayActivity"][];
         };
     };
     responses: {

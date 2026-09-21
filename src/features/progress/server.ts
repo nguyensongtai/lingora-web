@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { serverFetch } from "@/lib/api/server-client";
 
 import { EMPTY_PROGRESS, type ProgressSnapshot } from "./types";
@@ -7,8 +9,11 @@ import { EMPTY_PROGRESS, type ProgressSnapshot } from "./types";
 /**
  * Khách chưa đăng nhập nhận snapshot rỗng chứ không phải lỗi: mọi màn đều vẽ
  * được khi chưa có tiến độ, nên không có lý do bắt phía trên rẽ nhánh.
+ *
+ * Bọc cache() vì cả khung app lẫn trang bên trong đều cần snapshot; không có nó
+ * thì mỗi lần dựng trang lại gọi API hai lần cho cùng một dữ liệu.
  */
-export async function readProgress(): Promise<ProgressSnapshot> {
+export const readProgress = cache(async function readProgress(): Promise<ProgressSnapshot> {
   const response = await serverFetch("/me/progress");
 
   if (response.status === 401) {
@@ -19,4 +24,4 @@ export async function readProgress(): Promise<ProgressSnapshot> {
   }
 
   return (await response.json()) as ProgressSnapshot;
-}
+});

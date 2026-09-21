@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
+import { ProgressChips } from "@/features/progress/components/progress-chips";
+import { readProgress } from "@/features/progress/server";
 import { hasSession } from "@/lib/auth/session";
 
 import { AccountBadge, AccountBadgeSkeleton } from "./account-badge";
@@ -35,5 +37,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 async function SessionAwareTopbar() {
-  return <AppTopbar signedIn={await hasSession()} />;
+  const signedIn = await hasSession();
+  if (!signedIn) {
+    return <AppTopbar signedIn={false} />;
+  }
+
+  // readProgress được bọc cache() nên trang bên trong dùng lại đúng lần đọc này.
+  return (
+    <AppTopbar
+      signedIn
+      chips={<ProgressChips initialProgress={await readProgress()} />}
+    />
+  );
 }

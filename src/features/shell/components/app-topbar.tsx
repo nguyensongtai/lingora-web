@@ -2,13 +2,20 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { navTitle } from "../nav";
 
 import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
 
-export function AppTopbar({ signedIn }: { signedIn: boolean }) {
+export function AppTopbar({
+  signedIn,
+  chips,
+}: {
+  signedIn: boolean;
+  chips?: ReactNode;
+}) {
   const pathname = usePathname();
 
   return (
@@ -25,6 +32,7 @@ export function AppTopbar({ signedIn }: { signedIn: boolean }) {
         <span className="text-base font-bold">{navTitle(pathname)}</span>
       </div>
       <div className="max-app:hidden flex-1" />
+      {chips}
       <ThemeToggle />
       {/* Sidebar giữ nút đăng xuất trên desktop; mobile không có sidebar. */}
       {signedIn ? <MobileSignOut /> : null}
