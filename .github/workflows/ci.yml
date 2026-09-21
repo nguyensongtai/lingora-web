@@ -15,9 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Không khai version ở đây: action đọc từ "packageManager" trong package.json.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11
 
       - uses: actions/setup-node@v5
         with:
