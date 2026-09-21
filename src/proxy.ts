@@ -16,6 +16,18 @@ type TokenPair = {
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1";
 
 /**
+ * Nhánh bắt buộc phải có phiên. Những đường còn lại trong matcher chỉ ghé qua
+ * để gia hạn token nếu có — khách chưa đăng nhập vẫn xem được trang.
+ */
+const PROTECTED_PREFIXES = ["/admin", "/api/admin"];
+
+function isProtected(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+/**
  * Proxy là nơi duy nhất làm mới được phiên: Server Component không set cookie
  * được, nên access token phải được bảo đảm còn hạn trước khi trang chạy.
  */
@@ -28,7 +40,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!refreshToken) {
-    return rejectUnauthenticated(request);
+    return isProtected(request.nextUrl.pathname)
+      ? rejectUnauthenticated(request)
+      : NextResponse.next();
   }
 
   const upstream = await fetch(`${apiBaseUrl}/auth/refresh`, {
@@ -40,7 +54,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (!upstream?.ok) {
     // Refresh token chết thì phiên coi như hết; xoá cookie để không thử lại mãi.
-    const response = rejectUnauthenticated(request);
+    const response = isProtected(request.nextUrl.pathname)
+      ? rejectUnauthenticated(request)
+      : NextResponse.next();
     response.cookies.delete(REFRESH_TOKEN_COOKIE);
     return response;
   }
@@ -78,6 +94,13 @@ function rejectUnauthenticated(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Khu vực quản trị và các route ghi của nó; trang công khai không đụng tới.
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  // Khu vực quản trị, cộng những trang đọc tiến độ của người đang đăng nhập —
+  // các trang đó cần access token còn hạn, nhưng không cấm khách vào xem.
+  matcher: [
+    "/",
+    "/learn",
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/api/me/:path*",
+  ],
 };

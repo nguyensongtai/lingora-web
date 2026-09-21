@@ -222,6 +222,53 @@ export interface paths {
         patch: operations["updateLesson"];
         trace?: never;
     };
+    "/me/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Đọc toàn bộ tiến độ của người đang đăng nhập
+         * @description Trả một lần đủ dữ liệu để dựng mọi màn: tỉ lệ từng khoá, danh sách bài
+         *     đã đánh dấu xong, và khoá được học gần đây nhất.
+         */
+        get: operations["getProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/progress/lessons/{lessonId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Đánh dấu đã học xong một bài
+         * @description Idempotent: gọi lại không dời mốc hoàn thành đã ghi lần đầu.
+         */
+        put: operations["markLessonComplete"];
+        post?: never;
+        /**
+         * Gỡ đánh dấu hoàn thành
+         * @description Idempotent: gỡ một bài chưa từng đánh dấu vẫn trả 204.
+         */
+        delete: operations["markLessonIncomplete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -347,6 +394,27 @@ export interface components {
             details?: {
                 [key: string]: string;
             };
+        };
+        CourseProgress: {
+            /** Format: uuid */
+            course_id: string;
+            /**
+             * Format: int64
+             * @description Tổng số bài chưa xoá của khoá — mẫu số của tỉ lệ.
+             */
+            lesson_count: number;
+            /** Format: int64 */
+            completed_count: number;
+        };
+        ProgressSnapshot: {
+            courses: components["schemas"]["CourseProgress"][];
+            /** @description Id các bài đã đánh dấu xong, mới nhất trước. */
+            completed_lesson_ids: string[];
+            /**
+             * Format: uuid
+             * @description Khoá được học gần đây nhất; `null` khi chưa học bài nào.
+             */
+            latest_course_id: string | null;
         };
     };
     responses: {
@@ -828,6 +896,73 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    getProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tiến độ hiện tại */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressSnapshot"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    markLessonComplete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã ghi nhận */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    markLessonIncomplete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã gỡ */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

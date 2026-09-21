@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forward } from "@/lib/api/forward";
 import { serverFetch } from "@/lib/api/server-client";
-
-import { forward } from "./forward";
 
 /** Tạo khoá học. Token được gắn phía server nên client không cần biết tới nó. */
 export async function POST(request: Request): Promise<NextResponse> {

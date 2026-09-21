@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forward } from "@/lib/api/forward";
 import { serverFetch } from "@/lib/api/server-client";
-
-import { forward } from "../../forward";
 
 type Context = { params: Promise<{ id: string }> };
 
