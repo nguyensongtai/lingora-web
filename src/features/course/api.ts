@@ -45,6 +45,18 @@ export async function fetchCourseBySlug(
   );
 }
 
+export async function fetchLesson(
+  lessonId: string,
+  signal?: AbortSignal,
+): Promise<Lesson> {
+  return unwrap(
+    await apiClient.GET("/lessons/{lessonId}", {
+      params: { path: { lessonId } },
+      signal,
+    }),
+  );
+}
+
 export async function fetchCourseLessons(
   courseId: string,
   signal?: AbortSignal,

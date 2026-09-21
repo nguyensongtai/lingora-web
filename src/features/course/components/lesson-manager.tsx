@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import {
@@ -120,6 +121,11 @@ export function LessonManager({ courseId, lessons }: LessonManagerProps) {
                         onClick={() => move(index, 1)}
                       >
                         ↓
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/admin/lessons/${lesson.id}/vocabulary`}>
+                          Từ vựng
+                        </Link>
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setEditingId(lesson.id)}>
                         Sửa
