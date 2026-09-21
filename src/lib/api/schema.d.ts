@@ -164,11 +164,62 @@ export interface paths {
          */
         get: operations["listCourseLessons"];
         put?: never;
+        /**
+         * Thêm bài học vào khoá
+         * @description Bài mới luôn đứng cuối; đổi thứ tự bằng endpoint order.
+         */
+        post: operations["createLesson"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{courseId}/lessons/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: components["parameters"]["CourseId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Sắp xếp lại bài học trong khoá
+         * @description Danh sách phải liệt kê đúng tập bài hiện có của khoá — thiếu, thừa hay
+         *     trùng đều bị từ chối. Vị trí mới lấy từ chính thứ tự của mảng.
+         */
+        put: operations["reorderLessons"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/lessons/{lessonId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        /** Lấy bài học theo id */
+        get: operations["getLesson"];
+        put?: never;
+        post?: never;
+        /** Xoá mềm bài học */
+        delete: operations["deleteLesson"];
+        options?: never;
+        head?: never;
+        /**
+         * Cập nhật một phần bài học
+         * @description position không sửa được ở đây; dùng endpoint order của khoá.
+         */
+        patch: operations["updateLesson"];
         trace?: never;
     };
 }
@@ -271,6 +322,18 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        LessonCreate: {
+            slug: string;
+            title: string;
+        };
+        LessonUpdate: {
+            slug?: string;
+            title?: string;
+        };
+        LessonOrder: {
+            /** @description Toàn bộ id bài của khoá, theo thứ tự mong muốn. */
+            lesson_ids: string[];
         };
         LessonList: {
             items: components["schemas"]["Lesson"][];
@@ -627,6 +690,144 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    createLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: components["parameters"]["CourseId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonCreate"];
+            };
+        };
+        responses: {
+            /** @description Bài học đã được tạo */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lesson"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    reorderLessons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                courseId: components["parameters"]["CourseId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonOrder"];
+            };
+        };
+        responses: {
+            /** @description Đã sắp xếp lại */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bài học */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lesson"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xoá */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateLesson: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonUpdate"];
+            };
+        };
+        responses: {
+            /** @description Bài học sau khi cập nhật */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Lesson"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
 }

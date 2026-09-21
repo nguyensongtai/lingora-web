@@ -8,6 +8,8 @@ export type CourseCreate = components["schemas"]["CourseCreate"];
 export type CourseUpdate = components["schemas"]["CourseUpdate"];
 export type Lesson = components["schemas"]["Lesson"];
 export type LessonList = components["schemas"]["LessonList"];
+export type LessonCreate = components["schemas"]["LessonCreate"];
+export type LessonUpdate = components["schemas"]["LessonUpdate"];
 
 /** Tham số lọc và phân trang của GET /courses. */
 export type ListCoursesQuery = {
