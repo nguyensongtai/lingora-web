@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthForm } from "@/features/auth/components/auth-form";
 import { Wordmark } from "@/features/shell/components/wordmark";
+import { googleEnabled } from "@/lib/auth/google";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -71,7 +72,16 @@ async function AuthSection({
 }: {
   searchParams: PageProps<"/login">["searchParams"];
 }) {
-  return <AuthForm redirectTo={safeRedirect((await searchParams).next)} />;
+  const params = await searchParams;
+  const error = Array.isArray(params.error) ? params.error[0] : params.error;
+
+  return (
+    <AuthForm
+      redirectTo={safeRedirect(params.next)}
+      googleEnabled={googleEnabled()}
+      oauthError={error}
+    />
+  );
 }
 
 /**

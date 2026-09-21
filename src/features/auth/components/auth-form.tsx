@@ -16,7 +16,22 @@ const MIN_PASSWORD_LENGTH = 12;
 
 type Mode = "login" | "register";
 
-export function AuthForm({ redirectTo }: { redirectTo: string }) {
+const OAUTH_ERRORS: Record<string, string> = {
+  google_off: "Đăng nhập bằng Google chưa được bật trên máy chủ.",
+  google_cancelled: "Bạn đã huỷ đăng nhập bằng Google.",
+  google_state: "Phiên đăng nhập Google đã hết hạn, vui lòng thử lại.",
+  google_failed: "Không xác thực được với Google, vui lòng thử lại.",
+};
+
+export function AuthForm({
+  redirectTo,
+  googleEnabled,
+  oauthError,
+}: {
+  redirectTo: string;
+  googleEnabled: boolean;
+  oauthError: string | undefined;
+}) {
   const [mode, setMode] = useState<Mode>("login");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +48,7 @@ export function AuthForm({ redirectTo }: { redirectTo: string }) {
   const generalError =
     active.error && Object.keys(fieldErrors).length === 0
       ? active.error.message
-      : null;
+      : (oauthError && OAUTH_ERRORS[oauthError]) || null;
 
   function switchTo(next: Mode) {
     setMode(next);
@@ -185,11 +200,52 @@ export function AuthForm({ redirectTo }: { redirectTo: string }) {
         </button>
       </form>
 
+      {googleEnabled ? (
+        <>
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
+            <span className="bg-border h-px flex-1" />
+            hoặc
+            <span className="bg-border h-px flex-1" />
+          </div>
+
+          {/* Link chứ không phải nút gọi fetch: vòng OAuth là một chuỗi chuyển
+              hướng của trình duyệt, bắt đầu từ Route Handler của Next. */}
+          <a
+            href={`/api/auth/google?next=${encodeURIComponent(redirectTo)}`}
+            className="border-border bg-card hover:bg-secondary flex h-11 items-center justify-center gap-2.5 rounded-lg border text-sm font-semibold transition-colors"
+          >
+            <GoogleMark />
+            Tiếp tục với Google
+          </a>
+        </>
+      ) : null}
+
       <p className="text-muted-foreground text-center text-xs leading-relaxed">
         Khi tiếp tục, bạn đồng ý với Điều khoản và Chính sách bảo mật của
         Lingora.
       </p>
     </div>
+  );
+}
+
+/** Logo Google, vẽ tay theo đúng bốn màu thương hiệu. */
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"
+      />
+      <path fill="#FBBC05" d="M6.4 14a6 6 0 0 1 0-3.9V7.5H3.1a10 10 0 0 0 0 9z" />
+      <path
+        fill="#EA4335"
+        d="M12 6c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6z"
+      />
+    </svg>
   );
 }
 
