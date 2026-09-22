@@ -39,6 +39,7 @@ nhập vẫn hiện nhưng mọi màn hình có dữ liệu sẽ đứng ở ske
 | Biến | Bắt buộc | Việc |
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | | gốc của API, **đã gồm `/v1`**; mặc định `http://localhost:8080/v1` |
+| `NEXT_PUBLIC_SITE_URL` | | gốc công khai của site, dùng cho `og:image`, `robots.txt` và `sitemap.xml` |
 | `GOOGLE_CLIENT_ID` | | bỏ trống → nút "Tiếp tục với Google" không hiện |
 
 `GOOGLE_CLIENT_ID` ở đây **không** có tiền tố `NEXT_PUBLIC_`: nó chỉ được đọc ở
@@ -226,8 +227,25 @@ không có `tailwind.config.ts`.
 | `pnpm start` | chạy bản build |
 | `pnpm typecheck` | `next typegen && tsc --noEmit` |
 | `pnpm lint` | eslint |
+| `pnpm test` | vitest, chạy một lượt |
+| `pnpm test:watch` | vitest, chạy lại khi sửa file |
 | `pnpm api:spec` | tải lại `openapi.yaml` từ `lingora-api` |
 | `pnpm api:types` | sinh lại `src/lib/api/schema.d.ts` |
 
-CI chạy `typecheck`, `lint`, `build`. **Repo này chưa có test tự động** — không
-có test runner nào được cài, nên mọi thay đổi vẫn phải mở trình duyệt xem lại.
+CI chạy `typecheck`, `lint`, `test`, `build` — theo đúng thứ tự đó.
+
+**`pnpm build` bắt được lỗi mà ba lệnh kia không thấy.** Cache Components chỉ
+kiểm tra ranh giới prerender lúc build; một `usePathname` thiếu `<Suspense>`
+trên route động vẫn qua được typecheck, lint và test.
+
+## Test
+
+Vitest, môi trường `node` — chưa có test component nên chưa cần DOM. Test nằm
+cạnh file nó kiểm (`nav.ts` ↔ `nav.test.ts`).
+
+Chỗ được test là chỗ sai mà không ai phát hiện được bằng mắt: lọc tham số
+`next` để chặn open redirect, tuỳ chọn cookie phiên, hạn chờ fetch, phép tính
+cập nhật lạc quan của tiến độ, và vòng mã hoá state OAuth.
+
+`tsc` kiểm cả file test, nên kiểu của fixture phải khớp schema sinh từ
+OpenAPI — một fixture viết sai tên field sẽ đỏ ở `pnpm typecheck` dù test xanh.
