@@ -186,7 +186,11 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** Lấy khoá học theo id */
+        /**
+         * Lấy khoá học theo id
+         * @description Khoá `draft` chỉ admin đọc được; người khác nhận 404 chứ không phải 403,
+         *     vì 403 đã xác nhận bản ghi đó tồn tại.
+         */
         get: operations["getCourse"];
         put?: never;
         post?: never;
@@ -209,7 +213,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lấy khoá học theo slug */
+        /**
+         * Lấy khoá học theo slug
+         * @description Khoá `draft` chỉ admin đọc được; người khác nhận 404 chứ không phải 403,
+         *     vì 403 đã xác nhận bản ghi đó tồn tại.
+         */
         get: operations["getCourseBySlug"];
         put?: never;
         post?: never;
@@ -232,6 +240,9 @@ export interface paths {
          * Liệt kê bài học của một khoá
          * @description Sắp xếp theo `position` tăng dần. Khoá không tồn tại trả về 404; khoá có
          *     thật nhưng chưa có bài trả về mảng rỗng.
+         *
+         *     Bài không có trạng thái riêng, nó thừa hưởng của khoá: bài thuộc khoá
+         *     `draft` chỉ admin đọc được, người khác cũng nhận 404.
          */
         get: operations["listCourseLessons"];
         put?: never;
@@ -278,7 +289,11 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** Lấy bài học theo id */
+        /**
+         * Lấy bài học theo id
+         * @description Bài không có trạng thái riêng, nó thừa hưởng của khoá: bài thuộc khoá
+         *     `draft` chỉ admin đọc được, người khác nhận 404.
+         */
         get: operations["getLesson"];
         put?: never;
         post?: never;
@@ -347,7 +362,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách từ vựng của một bài */
+        /**
+         * Danh sách từ vựng của một bài
+         * @description Công cụ soạn nội dung, chỉ admin. Người học đọc từ của mình ở
+         *     `/me/vocabulary`, nơi hàng đợi được lọc theo bài họ đã học xong.
+         */
         get: operations["listVocabulary"];
         put?: never;
         /** Thêm một từ vào bài */
@@ -666,7 +685,7 @@ export interface components {
         };
         Error: {
             /** @enum {string} */
-            code: "validation_error" | "malformed_body" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "internal_error";
+            code: "validation_error" | "malformed_body" | "unauthorized" | "forbidden" | "not_found" | "method_not_allowed" | "conflict" | "rate_limited" | "internal_error";
             /** @description Câu thông báo tiếng Việt, hiển thị được cho người dùng. */
             message: string;
             /** @description Lỗi theo từng field, chỉ có với validation_error. */
@@ -786,6 +805,10 @@ export interface components {
     };
     parameters: {
         CourseId: string;
+        /**
+         * @description Chỉ có tác dụng với token admin. Người gọi khác luôn nhận `published`,
+         *     và nếu xin `draft` thì nhận một trang rỗng.
+         */
         StatusFilter: components["schemas"]["CourseStatus"];
         LevelFilter: components["schemas"]["CourseLevel"];
         /** @description Mặc định 20, trần 100. */
@@ -964,6 +987,10 @@ export interface operations {
     listCourses: {
         parameters: {
             query?: {
+                /**
+                 * @description Chỉ có tác dụng với token admin. Người gọi khác luôn nhận `published`,
+                 *     và nếu xin `draft` thì nhận một trang rỗng.
+                 */
                 status?: components["parameters"]["StatusFilter"];
                 level?: components["parameters"]["LevelFilter"];
                 /** @description Mặc định 20, trần 100. */
@@ -1396,6 +1423,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     createVocabularyEntry: {

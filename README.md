@@ -54,13 +54,33 @@ phía server, và client secret thì hoàn toàn không có mặt trong repo nà
 | `/learn` | đã đăng nhập | lộ trình theo bậc CEFR, đánh dấu bài đã xong |
 | `/vocabulary` | đã đăng nhập | hàng đợi ôn và flashcard |
 | `/practice` `/progress` `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
-| `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học |
+| `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học và danh sách bài |
 | `/admin/**` | role `admin` | soạn khoá, bài và từ vựng |
 | `/api/**` | tuỳ route | Route Handler của BFF, xem [Xác thực](#xác-thực) |
 
 Ba màn `/practice`, `/progress` và `/tutor` **cố ý là chỗ trống có ghi chú**,
 không phải giao diện dựng bằng số liệu mẫu: chúng nói thẳng còn thiếu mô hình dữ
 liệu nào. Dựng sẵn bằng số bịa sẽ khiến người xem tưởng tính năng đã chạy.
+
+### Khi có sự cố
+
+| File | Bắt cái gì |
+| --- | --- |
+| `app/not-found.tsx` | `notFound()` và mọi URL không khớp route nào |
+| `app/error.tsx` | lỗi ở bất kỳ đâu dưới root layout |
+| `app/(app)/error.tsx` `app/admin/error.tsx` | lỗi trong khu vực đó, **giữ nguyên layout** nên người dùng còn thanh điều hướng |
+| `app/global-error.tsx` | lưới cuối: lỗi trong chính root layout |
+
+`global-error.tsx` tự dựng `html`/`body` và không dùng lại component nào — nó
+chạy đúng lúc thứ nó định dùng lại có thể là nguyên nhân.
+
+Nút "Thử lại" gọi `router.refresh()` **chứ không chỉ** `reset()`: với lỗi đến từ
+Server Component, router vẫn giữ kết quả hỏng trong cache, nên `reset()` một
+mình cho ra đúng màn lỗi đó bao nhiêu lần cũng vậy.
+
+Id sai định dạng trong đường dẫn (400 của API) được gộp vào 404: nó không thể
+trỏ tới bản ghi nào, nên với người vừa dán nhầm URL thì "không hợp lệ" và "không
+tồn tại" là cùng một chuyện.
 
 ## Xác thực
 
@@ -117,8 +137,21 @@ Ba đường, dùng đúng chỗ:
 `React.cache()` bọc những hàm đọc mà cả layout lẫn page cùng cần
 (`readProgress`, `readVocabulary`), để một lần render chỉ gọi API một lần.
 
+**Mọi lời gọi API đều có hạn chờ 10 giây** (`lib/api/deadline.ts`). Không có nó,
+một API treo — chứ không phải chết — khiến trang đứng ở skeleton vĩnh viễn.
+`fetchWithDeadline` gộp hạn chờ với `signal` của người gọi chứ không ghi đè, để
+TanStack Query vẫn huỷ được query khi component unmount. `proxy.ts` dùng chung
+nó, và đó là chỗ quan trọng nhất: proxy chạy trước khi có một byte HTML nào.
+
 **Cache Components**: mọi thứ đọc cookie hay `searchParams` đều phải nằm trong
 `<Suspense>`. Quên là build đỏ, không phải lỗi lúc chạy.
+
+Điều đó áp cả cho `usePathname` trong Client Component: trên route có param động
+(`/courses/[id]`) đường dẫn chỉ biết lúc chạy, nên hook suspend và build hỏng với
+E1433. Ba khối điều hướng trong `AppShell` vì thế tách làm hai — bản đọc hook và
+bản nhận `pathname: null` làm fallback — để khung giữ nguyên và chỉ phần tô sáng
+stream xuống sau. **`pnpm typecheck` và `pnpm lint` không bắt được lỗi này, chỉ
+`pnpm build` bắt.**
 
 ## Type từ OpenAPI
 
