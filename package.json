@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "api:types": "openapi-typescript openapi/openapi.yaml -o src/lib/api/schema.d.ts",
     "api:spec": "curl -fsSL https://raw.githubusercontent.com/nguyensongtai/lingora-api/main/openapi.yaml -o openapi/openapi.yaml"
   },
@@ -34,7 +36,8 @@
     "openapi-typescript": "^7.13.0",
     "shadcn": "^4.21.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.1"
   },
   "packageManager": "pnpm@11.7.0"
 }
