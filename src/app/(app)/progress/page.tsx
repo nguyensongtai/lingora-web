@@ -9,7 +9,7 @@ export default function ProgressPage() {
     <ScreenPlaceholder
       title="Tiến độ"
       en="Progress"
-      needs="API chưa ghi nhận tiến độ học, XP hay streak của người dùng."
+      needs="API mới có XP, streak và hoạt động 7 ngày — đủ cho thẻ Hôm nay ở trang chủ, chưa đủ cho biểu đồ dài ngày và điểm sáu kỹ năng của màn này."
     />
   );
 }
