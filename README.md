@@ -54,14 +54,22 @@ phía server, và client secret thì hoàn toàn không có mặt trong repo nà
 | `/login` | tất cả | đăng nhập và tạo tài khoản chung một form |
 | `/learn` | đã đăng nhập | lộ trình theo bậc CEFR, đánh dấu bài đã xong |
 | `/vocabulary` | đã đăng nhập | hàng đợi ôn và flashcard |
-| `/practice` `/progress` `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
+| `/practice` | đã đăng nhập | luyện lại vốn từ đã mở khoá |
+| `/progress` | đã đăng nhập | XP, chuỗi ngày, biểu đồ 30 ngày, tiến độ từng bậc |
+| `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
 | `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học và danh sách bài |
 | `/admin/**` | role `admin` | soạn khoá, bài và từ vựng |
 | `/api/**` | tuỳ route | Route Handler của BFF, xem [Xác thực](#xác-thực) |
 
-Ba màn `/practice`, `/progress` và `/tutor` **cố ý là chỗ trống có ghi chú**,
-không phải giao diện dựng bằng số liệu mẫu: chúng nói thẳng còn thiếu mô hình dữ
-liệu nào. Dựng sẵn bằng số bịa sẽ khiến người xem tưởng tính năng đã chạy.
+`/tutor` **cố ý là chỗ trống có ghi chú**, không phải giao diện dựng bằng số
+liệu mẫu: nó nói thẳng còn thiếu gì. Dựng sẵn bằng số bịa sẽ khiến người xem
+tưởng tính năng đã chạy. `/progress` cũng bỏ phần điểm sáu kỹ năng mà design
+vẽ, vì chưa có mô hình dữ liệu nào cho nó.
+
+`/practice` sinh câu hỏi tại chỗ từ vốn từ đã mở khoá — không có bảng câu hỏi
+nào để soạn. Chấm ở server, không so chuỗi ở client: client có sẵn đáp án trong
+DOM, và server còn phải biết câu sai để đẩy từ về hàng đợi ôn. Trả lời đúng
+**không** đổi lịch ôn; chỉ câu sai mới phạt.
 
 ### Khi có sự cố
 
