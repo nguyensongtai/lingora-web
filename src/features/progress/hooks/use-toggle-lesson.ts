@@ -3,11 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { completeLesson, uncompleteLesson } from "../api";
+import { applyToggle, type LessonToggle } from "../optimistic";
 import type { ProgressSnapshot } from "../types";
 
 import { progressKeys } from "./query-keys";
-
-type Toggle = { lessonId: string; courseId: string; completed: boolean };
 
 /**
  * Cập nhật lạc quan rồi mới gọi API: người học bấm xong bài thì dấu tích phải
@@ -17,10 +16,10 @@ export function useToggleLessonComplete() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ lessonId, completed }: Toggle) =>
+    mutationFn: ({ lessonId, completed }: LessonToggle) =>
       completed ? completeLesson(lessonId) : uncompleteLesson(lessonId),
 
-    onMutate: async (toggle: Toggle) => {
+    onMutate: async (toggle: LessonToggle) => {
       await queryClient.cancelQueries({ queryKey: progressKeys.snapshot() });
       const previous = queryClient.getQueryData<ProgressSnapshot>(
         progressKeys.snapshot(),
@@ -47,40 +46,3 @@ export function useToggleLessonComplete() {
     },
   });
 }
-
-function applyToggle(
-  snapshot: ProgressSnapshot,
-  { lessonId, courseId, completed }: Toggle,
-): ProgressSnapshot {
-  const already = snapshot.completed_lesson_ids.includes(lessonId);
-  if (already === completed) {
-    return snapshot;
-  }
-
-  const delta = completed ? 1 : -1;
-  // Ngày cuối của week luôn là hôm nay, nên XP và chấm hôm nay đổi cùng nhau.
-  const week = snapshot.week.map((day, index) =>
-    index === snapshot.week.length - 1
-      ? {
-          ...day,
-          completed_lessons: Math.max(0, day.completed_lessons + delta),
-        }
-      : day,
-  );
-
-  return {
-    ...snapshot,
-    completed_lesson_ids: completed
-      ? [lessonId, ...snapshot.completed_lesson_ids]
-      : snapshot.completed_lesson_ids.filter((id) => id !== lessonId),
-    courses: snapshot.courses.map((course) =>
-      course.course_id === courseId
-        ? { ...course, completed_count: course.completed_count + delta }
-        : course,
-    ),
-    latest_course_id: completed ? courseId : snapshot.latest_course_id,
-    today_xp: Math.max(0, snapshot.today_xp + delta * snapshot.xp_per_lesson),
-    week,
-  };
-}
-
