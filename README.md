@@ -58,6 +58,7 @@ phía server, và client secret thì hoàn toàn không có mặt trong repo nà
 | `/progress` | đã đăng nhập | XP, chuỗi ngày, biểu đồ 30 ngày, tiến độ từng bậc |
 | `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
 | `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học và danh sách bài |
+| `/lessons/[id]` | đã đăng nhập | **nội dung bài học**: giải thích, câu mẫu, hội thoại |
 | `/admin/**` | role `admin` | soạn khoá, bài và từ vựng |
 | `/api/**` | tuỳ route | Route Handler của BFF, xem [Xác thực](#xác-thực) |
 
