@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { Button } from "@/components/ui/button";
+import { RetryButton } from "@/features/shell/components/retry-button";
 import { ScreenMessage } from "@/features/shell/components/screen-message";
 
 /**
@@ -28,7 +28,7 @@ export default function AppError({
       href="/learn"
       linkLabel="Tới lộ trình học"
     >
-      <Button onClick={reset}>Thử lại</Button>
+      <RetryButton reset={reset} />
     </ScreenMessage>
   );
 }

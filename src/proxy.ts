@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { fetchWithDeadline } from "@/lib/api/deadline";
 import {
   ACCESS_TOKEN_COOKIE,
   PERSIST_COOKIE,
@@ -55,7 +56,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
       : NextResponse.next();
   }
 
-  const upstream = await fetch(`${apiBaseUrl}/auth/refresh`, {
+  // Hạn chờ ở đây là chỗ quan trọng nhất: proxy chạy trước khi có một byte HTML
+  // nào, nên API treo mà không cắt thì cả app đứng, không riêng một màn hình.
+  const upstream = await fetchWithDeadline(`${apiBaseUrl}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),

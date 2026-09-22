@@ -1,5 +1,7 @@
 import createClient from "openapi-fetch";
 
+import { fetchWithDeadline } from "./deadline";
+
 import type { components, paths } from "./schema";
 
 /** Body lỗi thống nhất của API, sinh từ openapi.yaml. */
@@ -8,7 +10,10 @@ export type ApiErrorBody = components["schemas"]["Error"];
 export const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1";
 
-export const apiClient = createClient<paths>({ baseUrl: apiBaseUrl });
+export const apiClient = createClient<paths>({
+  baseUrl: apiBaseUrl,
+  fetch: fetchWithDeadline,
+});
 
 /**
  * ApiError giữ nguyên code và details của API để UI chọn được thông báo, thay
