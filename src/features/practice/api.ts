@@ -1,0 +1,42 @@
+import { ApiError, type ApiErrorBody } from "@/lib/api/client";
+
+import type { PracticeKind, PracticeQuestion, PracticeResult } from "./types";
+
+/** Như mọi thứ của riêng người dùng, đi qua Route Handler chứ không gọi thẳng API. */
+async function callMe<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(path, init);
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as ApiErrorBody | null;
+    throw new ApiError(response.status, body ?? undefined);
+  }
+  return (await response.json()) as T;
+}
+
+export async function fetchSession(size: number): Promise<PracticeQuestion[]> {
+  const body = await callMe<{ questions: PracticeQuestion[] }>(
+    `/api/me/practice/session?size=${size}`,
+  );
+  return body.questions;
+}
+
+/**
+ * Chấm ở server chứ không so chuỗi ở client: client có sẵn đáp án trong DOM,
+ * nên tự chấm thì con số đúng/sai không nói lên điều gì — và server còn phải
+ * biết câu sai để đẩy từ về hàng đợi ôn.
+ */
+export function checkAnswer(input: {
+  entryId: string;
+  kind: PracticeKind;
+  answer: string;
+}): Promise<PracticeResult> {
+  return callMe<PracticeResult>("/api/me/practice/answers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      entry_id: input.entryId,
+      kind: input.kind,
+      answer: input.answer,
+    }),
+  });
+}
