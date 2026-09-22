@@ -1,6 +1,6 @@
 import { ApiError, type ApiErrorBody } from "@/lib/api/client";
 
-import type { ProgressSnapshot } from "./types";
+import type { ProgressHistory, ProgressSnapshot } from "./types";
 
 /**
  * Tiến độ luôn đi qua Route Handler của Next chứ không gọi thẳng API: access
@@ -32,4 +32,8 @@ export function uncompleteLesson(lessonId: string): Promise<void> {
   return callMe<void>(`/api/me/progress/lessons/${lessonId}`, {
     method: "DELETE",
   });
+}
+
+export function fetchHistory(days: number): Promise<ProgressHistory> {
+  return callMe<ProgressHistory>(`/api/me/progress/history?days=${days}`);
 }

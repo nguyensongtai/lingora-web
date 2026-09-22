@@ -4,7 +4,12 @@ import { cache } from "react";
 
 import { serverFetch } from "@/lib/api/server-client";
 
-import { EMPTY_PROGRESS, type ProgressSnapshot } from "./types";
+import {
+  EMPTY_HISTORY,
+  EMPTY_PROGRESS,
+  type ProgressHistory,
+  type ProgressSnapshot,
+} from "./types";
 
 /**
  * Khách chưa đăng nhập nhận snapshot rỗng chứ không phải lỗi: mọi màn đều vẽ
@@ -24,4 +29,20 @@ export const readProgress = cache(async function readProgress(): Promise<Progres
   }
 
   return (await response.json()) as ProgressSnapshot;
+});
+
+/** Lịch sử dài ngày cho màn Tiến độ; khách chưa đăng nhập nhận bản rỗng. */
+export const readHistory = cache(async function readHistory(
+  days: number,
+): Promise<ProgressHistory> {
+  const response = await serverFetch(`/me/progress/history?days=${days}`);
+
+  if (response.status === 401) {
+    return EMPTY_HISTORY;
+  }
+  if (!response.ok) {
+    throw new Error(`Không đọc được lịch sử học (HTTP ${response.status}).`);
+  }
+
+  return (await response.json()) as ProgressHistory;
 });

@@ -329,6 +329,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/practice/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dựng một phiên luyện tập */
+        get: operations["getPracticeSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/practice/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chấm một câu trả lời */
+        post: operations["checkPracticeAnswer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/progress/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lịch sử học dài ngày */
+        get: operations["getProgressHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/progress/lessons/{lessonId}": {
         parameters: {
             query?: never;
@@ -709,6 +760,90 @@ export interface components {
             date: string;
             /** Format: int64 */
             completed_lessons: number;
+        };
+        /** @enum {string} */
+        PracticeKind: "multiple_choice" | "fill_blank" | "listen_choose";
+        PracticeQuestion: {
+            /** Format: uuid */
+            entry_id: string;
+            kind: components["schemas"]["PracticeKind"];
+            level: components["schemas"]["CourseLevel"];
+            /**
+             * @description Từ tiếng Anh. Với `listen_choose`, phía trước cần nó để máy đọc lên
+             *     — nghĩa là đáp án nằm sẵn trong trang. Đó là hệ quả không tránh
+             *     được khi phát âm bằng `speechSynthesis` thay vì file audio.
+             */
+            word: string;
+            /**
+             * @description Câu dẫn. `multiple_choice`: chính từ đó. `fill_blank`: câu ví dụ đã
+             *     khoét chỗ trống. `listen_choose`: chuỗi rỗng, câu dẫn là âm thanh.
+             */
+            prompt: string;
+            /** @description Gợi ý thêm; hiện chỉ `fill_blank` dùng, để hiện nghĩa tiếng Việt. */
+            hint: string;
+            /** @description Rỗng với `fill_blank` vì dạng đó gõ tay. */
+            options: string[];
+        };
+        /**
+         * @description Câu hỏi sinh tại chỗ từ vốn từ người học đã mở khoá — không có bảng câu
+         *     hỏi nào để soạn. Chưa đủ từ thì `questions` rỗng; đó là trạng thái bình
+         *     thường của màn hình, không phải lỗi.
+         */
+        PracticeSession: {
+            questions: components["schemas"]["PracticeQuestion"][];
+        };
+        PracticeAnswer: {
+            /** Format: uuid */
+            entry_id: string;
+            kind: components["schemas"]["PracticeKind"];
+            /** @description Lựa chọn đã chọn, hoặc chuỗi đã gõ. So sánh bỏ qua hoa/thường và khoảng trắng thừa. */
+            answer: string;
+        };
+        PracticeResult: {
+            correct: boolean;
+            /** @description Đáp án đúng, trả về cả khi làm đúng để người học đối chiếu. */
+            expected: string;
+            /**
+             * @description Câu sai đẩy từ về đầu hàng đợi ôn. Trả lời ĐÚNG không kéo dài
+             *     khoảng cách ôn — luyện dồn một buổi không được biến một từ vừa gặp
+             *     thành "thành thạo".
+             */
+            penalised: boolean;
+        };
+        /**
+         * @description Bức tranh dài hạn, dùng cho màn Tiến độ. `ProgressSnapshot` trả lời
+         *     "hôm nay thế nào", cái này trả lời "từ trước tới giờ thế nào".
+         */
+        ProgressHistory: {
+            /**
+             * @description Dải ngày liên tục kết thúc ở hôm nay, cũ trước mới sau. Ngày không
+             *     học vẫn có mặt với `completed_lessons` bằng 0.
+             */
+            days: components["schemas"]["DayActivity"][];
+            /**
+             * Format: int64
+             * @description Tổng số bài đã hoàn thành, tính trên cả đời chứ không giới hạn trong `days`.
+             */
+            total_lessons: number;
+            /** Format: int64 */
+            total_xp: number;
+            /**
+             * Format: int64
+             * @description Số ngày có học, đếm trong phạm vi `days`.
+             */
+            active_days: number;
+            /** Format: int64 */
+            current_streak: number;
+            /**
+             * Format: int64
+             * @description Dải liên tiếp dài nhất **trong phạm vi `days`**, không phải kỷ lục
+             *     mọi thời. Hỏi 30 ngày thì đây là "dài nhất trong 30 ngày qua".
+             */
+            longest_streak: number;
+            /** Format: int64 */
+            xp_per_lesson: number;
+            /** Format: int64 */
+            goal_xp: number;
         };
         ProgressSnapshot: {
             courses: components["schemas"]["CourseProgress"][];
@@ -1351,6 +1486,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProgressSnapshot"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getPracticeSession: {
+        parameters: {
+            query?: {
+                /** @description Số câu muốn có, mặc định 10, trần 30. Ngoài khoảng thì kẹp về biên. */
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Phiên luyện tập */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeSession"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    checkPracticeAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PracticeAnswer"];
+            };
+        };
+        responses: {
+            /** @description Kết quả chấm */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getProgressHistory: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Số ngày muốn xem, mặc định 30, trần 365. Giá trị ngoài khoảng bị
+                 *     kẹp về biên chứ không báo lỗi — đây là tham số hiển thị, một con số
+                 *     vô lý trên URL không đáng làm hỏng cả màn hình.
+                 */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lịch sử học */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressHistory"];
                 };
             };
             401: components["responses"]["Unauthorized"];
