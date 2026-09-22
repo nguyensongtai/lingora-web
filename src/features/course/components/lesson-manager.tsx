@@ -123,6 +123,11 @@ export function LessonManager({ courseId, lessons }: LessonManagerProps) {
                         ↓
                       </Button>
                       <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/admin/lessons/${lesson.id}/content`}>
+                          Nội dung
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild>
                         <Link href={`/admin/lessons/${lesson.id}/vocabulary`}>
                           Từ vựng
                         </Link>
