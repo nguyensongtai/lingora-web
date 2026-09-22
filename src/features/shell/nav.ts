@@ -28,13 +28,22 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/progress", label: "Tiến độ", en: "Progress", icon: ChartColumn, primary: true },
 ];
 
-/** Trang chủ chỉ khớp chính xác; các mục khác khớp cả route con của chúng. */
-export function isActive(item: NavItem, pathname: string): boolean {
+/**
+ * Trang chủ chỉ khớp chính xác; các mục khác khớp cả route con của chúng.
+ *
+ * pathname null nghĩa là chưa biết đường dẫn — đó là lúc thanh điều hướng đang
+ * được prerender trên một route có param động. Khi đó không mục nào sáng lên,
+ * và trạng thái thật stream xuống ngay sau đó.
+ */
+export function isActive(item: NavItem, pathname: string | null): boolean {
+  if (pathname === null) {
+    return false;
+  }
   return item.href === "/"
     ? pathname === "/"
     : pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-export function navTitle(pathname: string): string {
+export function navTitle(pathname: string | null): string {
   return NAV_ITEMS.find((item) => isActive(item, pathname))?.label ?? "Lingora";
 }

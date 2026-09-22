@@ -16,8 +16,23 @@ export function AppTopbar({
   signedIn: boolean;
   chips?: ReactNode;
 }) {
-  const pathname = usePathname();
+  return <Topbar signedIn={signedIn} chips={chips} pathname={usePathname()} />;
+}
 
+/** Fallback của Suspense; xem chú thích ở AppSidebarFallback. */
+export function AppTopbarFallback() {
+  return <Topbar signedIn={false} pathname={null} />;
+}
+
+function Topbar({
+  signedIn,
+  chips,
+  pathname,
+}: {
+  signedIn: boolean;
+  chips?: ReactNode;
+  pathname: string | null;
+}) {
   return (
     <header className="bg-background app:px-8 sticky top-0 z-10 flex h-15 items-center gap-2 px-4">
       <div className="app:hidden flex flex-1 items-center gap-2">

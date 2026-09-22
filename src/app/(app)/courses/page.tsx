@@ -16,13 +16,18 @@ const PAGE_SIZE = 12;
 
 export default function CoursesPage({ searchParams }: PageProps<"/courses">) {
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-      <header className="mb-8 space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Khoá học</h1>
-        <p className="text-muted-foreground">
+    <main className="mx-auto flex w-full max-w-240 flex-1 flex-col gap-8 px-4 pt-1 pb-24 app:px-8 app:pt-2 app:pb-16">
+      <div>
+        <h1 className="text-[26px] leading-tight font-bold tracking-tight">
+          Khoá học{" "}
+          <span className="text-muted-foreground text-base font-medium">
+            · Courses
+          </span>
+        </h1>
+        <p className="text-muted-foreground mt-1.5">
           Chọn khoá phù hợp với trình độ của bạn.
         </p>
-      </header>
+      </div>
 
       {/* searchParams là dữ liệu động: Cache Components bắt buộc nó nằm trong Suspense. */}
       <Suspense fallback={<CourseListSkeleton />}>

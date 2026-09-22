@@ -8,8 +8,15 @@ import { cn } from "@/lib/utils";
 import { NAV_ITEMS, isActive } from "../nav";
 
 export function MobileNav() {
-  const pathname = usePathname();
+  return <MobileNavBar pathname={usePathname()} />;
+}
 
+/** Fallback của Suspense; xem chú thích ở AppSidebarFallback. */
+export function MobileNavFallback() {
+  return <MobileNavBar pathname={null} />;
+}
+
+function MobileNavBar({ pathname }: { pathname: string | null }) {
   return (
     <nav className="bg-card border-border app:hidden fixed inset-x-0 bottom-0 z-20 flex h-16 border-t px-1">
       {NAV_ITEMS.filter((item) => item.primary).map((item) => {
