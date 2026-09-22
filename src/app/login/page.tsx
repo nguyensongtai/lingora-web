@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AuthForm } from "@/features/auth/components/auth-form";
 import { Wordmark } from "@/features/shell/components/wordmark";
 import { googleEnabled } from "@/lib/auth/google";
+import { safePath } from "@/lib/safe-path";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -77,23 +78,11 @@ async function AuthSection({
 
   return (
     <AuthForm
-      redirectTo={safeRedirect(params.next)}
+      redirectTo={safePath(params.next)}
       googleEnabled={googleEnabled()}
       oauthError={error}
     />
   );
-}
-
-/**
- * Chỉ nhận đường dẫn nội bộ: tham số next đến từ URL nên không được phép đưa
- * người dùng sang tên miền khác sau khi đăng nhập.
- */
-function safeRedirect(raw: string | string[] | undefined): string {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (value && value.startsWith("/") && !value.startsWith("//")) {
-    return value;
-  }
-  return "/";
 }
 
 function FormSkeleton() {

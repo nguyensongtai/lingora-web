@@ -54,8 +54,3 @@ export function decodeState(raw: string | undefined): OAuthState | null {
   }
   return null;
 }
-
-/** Chỉ nhận đường dẫn nội bộ, như mọi chỗ khác xử lý tham số next. */
-export function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
-}

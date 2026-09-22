@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { safePath } from "@/lib/safe-path";
+
 import {
   GOOGLE_AUTHORIZE_URL,
   OAUTH_STATE_COOKIE,
@@ -8,7 +10,6 @@ import {
   googleClientId,
   googleEnabled,
   googleRedirectUri,
-  safeNext,
 } from "@/lib/auth/google";
 
 /**
@@ -21,7 +22,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.redirect(new URL("/login?error=google_off", request.url));
   }
 
-  const next = safeNext(new URL(request.url).searchParams.get("next"));
+  const next = safePath(new URL(request.url).searchParams.get("next"));
   const state = crypto.randomUUID();
 
   const authorize = new URL(GOOGLE_AUTHORIZE_URL);
