@@ -308,6 +308,32 @@ export interface paths {
         patch: operations["updateLesson"];
         trace?: never;
     };
+    "/lessons/{lessonId}/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Thay toàn bộ nội dung của một bài
+         * @description Nhận cả danh sách chứ không sửa từng khối: soạn bài là việc kéo thả và
+         *     viết lại, nên gửi trọn trạng thái mong muốn đơn giản hơn nhiều so với
+         *     một chuỗi thao tác thêm/sửa/xoá/đổi chỗ.
+         *
+         *     `position` không có trong body — thứ tự chính là thứ tự của mảng.
+         */
+        put: operations["replaceLessonBlocks"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/progress": {
         parameters: {
             query?: never;
@@ -712,12 +738,55 @@ export interface components {
             course_id: string;
             slug: string;
             title: string;
+            /** @description Đoạn dẫn ngắn hiện ngay dưới tiêu đề bài; có thể rỗng. */
+            summary: string;
             /** Format: int32 */
             position: number;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        /**
+         * @description `note` là đoạn giải thích tiếng Việt, `example` là câu mẫu Anh–Việt,
+         *     `dialogue` giống `example` nhưng có tên người nói.
+         * @enum {string}
+         */
+        LessonBlockKind: "note" | "example" | "dialogue";
+        /**
+         * @description Mỗi dạng chỉ dùng một phần các trường, phần còn lại phải là chuỗi rỗng:
+         *
+         *     | kind | trường bắt buộc | phải rỗng |
+         *     | --- | --- | --- |
+         *     | `note` | `body` | `text_en`, `text_vi`, `speaker` |
+         *     | `example` | `text_en` | `body`, `speaker` |
+         *     | `dialogue` | `text_en`, `speaker` | `body` |
+         *
+         *     Database có ràng buộc bắt đúng hình dạng này, nên gửi sai là 400 chứ
+         *     không phải một khối trống giữa bài.
+         */
+        LessonBlock: {
+            /**
+             * Format: uuid
+             * @description Chỉ có khi đọc; lúc ghi thì bỏ qua vì cả danh sách được thay mới.
+             */
+            id?: string;
+            kind: components["schemas"]["LessonBlockKind"];
+            body: string;
+            text_en: string;
+            text_vi: string;
+            speaker: string;
+        };
+        /**
+         * @description Thay TOÀN BỘ nội dung của bài. Gửi mảng rỗng là xoá sạch nội dung — đó
+         *     là cách duy nhất để làm việc đó, và nó có chủ đích.
+         */
+        LessonBlockList: {
+            blocks: components["schemas"]["LessonBlock"][];
+        };
+        LessonDetail: components["schemas"]["Lesson"] & {
+            /** @description Nội dung bài theo đúng thứ tự hiển thị. */
+            blocks: components["schemas"]["LessonBlock"][];
         };
         LessonCreate: {
             slug: string;
@@ -726,6 +795,7 @@ export interface components {
         LessonUpdate: {
             slug?: string;
             title?: string;
+            summary?: string;
         };
         LessonOrder: {
             /** @description Toàn bộ id bài của khoá, theo thứ tự mong muốn. */
@@ -1402,13 +1472,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Bài học */
+            /** @description Bài học kèm nội dung */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Lesson"];
+                    "application/json": components["schemas"]["LessonDetail"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -1468,6 +1538,34 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    replaceLessonBlocks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonBlockList"];
+            };
+        };
+        responses: {
+            /** @description Đã thay nội dung */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     getProgress: {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
 import type { Course, Lesson } from "@/features/course/types";
@@ -85,14 +86,17 @@ export function CourseLessons({
                 </span>
               )}
 
-              <span
+              {/* Tên bài là link: trước đây nó chỉ là chữ cạnh ô tick, nên
+                  không có đường nào vào nội dung bài. */}
+              <Link
+                href={`/lessons/${lesson.id}`}
                 className={cn(
-                  "min-w-0 flex-1 text-sm font-semibold",
+                  "hover:text-brand-strong min-w-0 flex-1 text-sm font-semibold transition-colors",
                   done && "text-muted-foreground line-through",
                 )}
               >
                 {lesson.title}
-              </span>
+              </Link>
             </li>
           );
         })}

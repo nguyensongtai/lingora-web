@@ -7,6 +7,7 @@ import type {
   CourseList,
   CourseUpdate,
   Lesson,
+  LessonDetail,
   LessonCreate,
   LessonList,
   LessonUpdate,
@@ -49,7 +50,7 @@ export async function fetchCourseBySlug(
 export async function fetchLesson(
   lessonId: string,
   signal?: AbortSignal,
-): Promise<Lesson> {
+): Promise<LessonDetail> {
   return unwrap(
     await apiClient.GET("/lessons/{lessonId}", {
       params: { path: { lessonId } },
