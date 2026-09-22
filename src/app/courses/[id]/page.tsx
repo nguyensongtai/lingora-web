@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCourse, fetchCourseLessons } from "@/features/course/api";
 import { LessonList } from "@/features/course/components/lesson-list";
 import { LEVEL_LABELS, STATUS_LABELS } from "@/features/course/types";
-import { ApiError } from "@/lib/api/client";
+import { handleMissing } from "@/lib/api/missing";
 
 export const metadata: Metadata = {
   title: "Khoá học",
@@ -41,8 +40,8 @@ async function CourseDetail({
   // Hai lời gọi độc lập nên chạy song song; 404 của bất kỳ cái nào cũng là
   // "khoá học không tồn tại".
   const [course, lessons] = await Promise.all([
-    fetchCourse(id).catch(handleNotFound),
-    fetchCourseLessons(id).catch(handleNotFound),
+    fetchCourse(id).catch(handleMissing),
+    fetchCourseLessons(id).catch(handleMissing),
   ]);
 
   return (
@@ -73,14 +72,6 @@ async function CourseDetail({
       </section>
     </article>
   );
-}
-
-/** 404 của API thành trang not-found của Next; lỗi khác vẫn nổi lên error boundary. */
-function handleNotFound(error: unknown): never {
-  if (error instanceof ApiError && error.status === 404) {
-    notFound();
-  }
-  throw error;
 }
 
 function CourseDetailSkeleton() {

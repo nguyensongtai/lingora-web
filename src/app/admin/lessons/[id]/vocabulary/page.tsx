@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchLesson } from "@/features/course/api";
 import { EntryManager } from "@/features/vocabulary/components/entry-manager";
 import type { VocabularyEntry } from "@/features/vocabulary/types";
-import { ApiError } from "@/lib/api/client";
+import { handleMissing } from "@/lib/api/missing";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { serverFetch } from "@/lib/api/server-client";
 
@@ -37,7 +36,7 @@ async function VocabularySection({
   const { id } = await params;
 
   const [lesson, entries] = await Promise.all([
-    fetchLesson(id).catch(handleNotFound),
+    fetchLesson(id).catch(handleMissing),
     readLessonVocabulary(id),
   ]);
 
@@ -75,9 +74,4 @@ async function readLessonVocabulary(
   return body.items;
 }
 
-function handleNotFound(error: unknown): never {
-  if (error instanceof ApiError && error.status === 404) {
-    notFound();
-  }
-  throw error;
-}
+

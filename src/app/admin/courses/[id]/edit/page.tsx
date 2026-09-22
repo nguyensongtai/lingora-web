@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+import { isMissing } from "@/lib/api/missing";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,7 +37,7 @@ async function EditForm({
   const { id } = await params;
   const response = await serverFetch(`/courses/${encodeURIComponent(id)}`);
 
-  if (response.status === 404) {
+  if (isMissing(response.status)) {
     notFound();
   }
   if (!response.ok) {

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { isMissing } from "@/lib/api/missing";
 import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +47,7 @@ async function LessonSection({
     serverFetch(`/courses/${encodeURIComponent(id)}/lessons`),
   ]);
 
-  if (courseResponse.status === 404 || lessonsResponse.status === 404) {
+  if (isMissing(courseResponse.status) || isMissing(lessonsResponse.status)) {
     notFound();
   }
   if (!courseResponse.ok || !lessonsResponse.ok) {
