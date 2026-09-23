@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 import { checkAnswer, fetchSession } from "../api";
 import {
   KIND_LABELS,
-  SESSION_SIZE,
   type PracticeQuestion,
   type PracticeResult,
+  type PracticeScope,
 } from "../types";
 
 type Phase =
@@ -22,8 +22,10 @@ type Phase =
   | { name: "failed" };
 
 export function PracticeScreen({
+  scope,
   initialQuestions,
 }: {
+  scope: PracticeScope;
   initialQuestions: PracticeQuestion[];
 }) {
   const [questions, setQuestions] = useState(initialQuestions);
@@ -44,6 +46,7 @@ export function PracticeScreen({
 
     try {
       const result = await checkAnswer({
+        scope,
         entryId: question.entry_id,
         kind: question.kind,
         answer,
@@ -70,7 +73,7 @@ export function PracticeScreen({
   async function restart() {
     setLoadingNext(true);
     try {
-      setQuestions(await fetchSession(SESSION_SIZE));
+      setQuestions(await fetchSession(scope));
       setIndex(0);
       setTyped("");
       setScore({ correct: 0, wrong: 0 });
@@ -83,12 +86,18 @@ export function PracticeScreen({
   }
 
   if (questions.length === 0) {
-    return <NothingToPractise />;
+    return <NothingToPractise scope={scope} />;
   }
 
   if (finished) {
     return (
-      <Summary score={score} total={questions.length} onRestart={restart} busy={loadingNext} />
+      <Summary
+        scope={scope}
+        score={score}
+        total={questions.length}
+        onRestart={restart}
+        busy={loadingNext}
+      />
     );
   }
 
@@ -332,11 +341,13 @@ function Progress({
 }
 
 function Summary({
+  scope,
   score,
   total,
   onRestart,
   busy,
 }: {
+  scope: PracticeScope;
   score: { correct: number; wrong: number };
   total: number;
   onRestart: () => void;
@@ -350,16 +361,9 @@ function Summary({
       <p className="text-4xl font-bold tracking-tight tabular-nums">
         {score.correct}/{answered || total}
       </p>
-      {score.wrong > 0 ? (
-        <p className="text-muted-foreground max-w-90 text-sm">
-          {score.wrong} từ sai đã quay lại hàng đợi ôn. Sang màn Từ vựng để ôn
-          lại chúng.
-        </p>
-      ) : (
-        <p className="text-muted-foreground max-w-90 text-sm">
-          Không sai câu nào — lịch ôn của bạn giữ nguyên.
-        </p>
-      )}
+      <p className="text-muted-foreground max-w-90 text-sm">
+        {summaryNote(scope, score.wrong)}
+      </p>
       <Button onClick={onRestart} disabled={busy} size="lg">
         <RotateCcw className="size-4" />
         {busy ? "Đang dựng lượt mới…" : "Luyện lượt nữa"}
@@ -368,13 +372,29 @@ function Summary({
   );
 }
 
-function NothingToPractise() {
+/**
+ * Câu chốt dưới điểm số. Nói "đã quay lại hàng đợi ôn" ở lượt luyện trong bài
+ * là nói sai: lượt đó không đụng tới lịch ôn.
+ */
+function summaryNote(scope: PracticeScope, wrong: number): string {
+  if (scope.kind === "lesson") {
+    return wrong > 0
+      ? `Còn ${wrong} từ chưa nhớ. Quay lại bước Từ vựng xem lại, rồi luyện lượt nữa.`
+      : "Bạn đã nhớ hết từ của bài này.";
+  }
+  return wrong > 0
+    ? `${wrong} từ sai đã quay lại hàng đợi ôn. Sang màn Từ vựng để ôn lại chúng.`
+    : "Không sai câu nào — lịch ôn của bạn giữ nguyên.";
+}
+
+function NothingToPractise({ scope }: { scope: PracticeScope }) {
   return (
     <div className="border-border bg-card rounded-card flex flex-col items-center gap-3 border px-5 py-12 text-center">
       <p className="font-semibold">Chưa đủ từ để luyện</p>
       <p className="text-muted-foreground max-w-100 text-sm leading-relaxed">
-        Câu hỏi được dựng từ chính những từ bạn đã mở khoá. Học xong vài bài nữa
-        để có đủ từ — cả đáp án đúng lẫn đáp án nhiễu đều lấy từ vốn từ của bạn.
+        {scope.kind === "lesson"
+          ? "Bài này có quá ít từ để dựng câu trắc nghiệm — cần ít nhất ba từ."
+          : "Câu hỏi được dựng từ chính những từ bạn đã mở khoá. Học xong vài bài nữa để có đủ từ — cả đáp án đúng lẫn đáp án nhiễu đều lấy từ vốn từ của bạn."}
       </p>
     </div>
   );

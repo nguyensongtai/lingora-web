@@ -787,6 +787,12 @@ export interface components {
         LessonDetail: components["schemas"]["Lesson"] & {
             /** @description Nội dung bài theo đúng thứ tự hiển thị. */
             blocks: components["schemas"]["LessonBlock"][];
+            /**
+             * @description Từ vựng bài này dạy, theo thứ tự của người soạn. Trả cho mọi
+             *     người đọc được bài — khác với /me/vocabulary, vốn chỉ gồm từ của
+             *     những bài đã học xong.
+             */
+            vocabulary: components["schemas"]["VocabularyEntry"][];
         };
         LessonCreate: {
             slug: string;
@@ -868,6 +874,13 @@ export interface components {
             kind: components["schemas"]["PracticeKind"];
             /** @description Lựa chọn đã chọn, hoặc chuỗi đã gõ. So sánh bỏ qua hoa/thường và khoảng trắng thừa. */
             answer: string;
+            /**
+             * Format: uuid
+             * @description Có khi câu hỏi đến từ lượt luyện trong bài (session với lesson_id).
+             *     Khi đó câu sai KHÔNG đụng tới lịch ôn: đây là lần gặp đầu, không
+             *     phải ôn.
+             */
+            lesson_id?: string;
         };
         PracticeResult: {
             correct: boolean;
@@ -876,7 +889,7 @@ export interface components {
             /**
              * @description Câu sai đẩy từ về đầu hàng đợi ôn. Trả lời ĐÚNG không kéo dài
              *     khoảng cách ôn — luyện dồn một buổi không được biến một từ vừa gặp
-             *     thành "thành thạo".
+             *     thành "thành thạo". Luôn là false với luyện tập trong bài.
              */
             penalised: boolean;
         };
@@ -1592,8 +1605,16 @@ export interface operations {
     getPracticeSession: {
         parameters: {
             query?: {
-                /** @description Số câu muốn có, mặc định 10, trần 30. Ngoài khoảng thì kẹp về biên. */
+                /**
+                 * @description Số câu muốn có, mặc định 10, trần 30. Ngoài khoảng thì kẹp về biên.
+                 *     Bỏ qua khi có lesson_id: luyện trong bài luôn hỏi hết từ của bài.
+                 */
                 size?: number;
+                /**
+                 * @description Luyện riêng từ của một bài, kể cả khi người học chưa bấm "Đã xong".
+                 *     Không có thì luyện từ vốn từ đã mở khoá, ưu tiên từ đến hạn ôn.
+                 */
+                lesson_id?: string;
             };
             header?: never;
             path?: never;
@@ -1610,7 +1631,9 @@ export interface operations {
                     "application/json": components["schemas"]["PracticeSession"];
                 };
             };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     checkPracticeAnswer: {

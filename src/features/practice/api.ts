@@ -1,6 +1,12 @@
 import { ApiError, type ApiErrorBody } from "@/lib/api/client";
 
-import type { PracticeKind, PracticeQuestion, PracticeResult } from "./types";
+import {
+  sessionQuery,
+  type PracticeKind,
+  type PracticeQuestion,
+  type PracticeResult,
+  type PracticeScope,
+} from "./types";
 
 /** Như mọi thứ của riêng người dùng, đi qua Route Handler chứ không gọi thẳng API. */
 async function callMe<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -13,9 +19,9 @@ async function callMe<T>(path: string, init: RequestInit = {}): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function fetchSession(size: number): Promise<PracticeQuestion[]> {
+export async function fetchSession(scope: PracticeScope): Promise<PracticeQuestion[]> {
   const body = await callMe<{ questions: PracticeQuestion[] }>(
-    `/api/me/practice/session?size=${size}`,
+    `/api/me/practice/session?${sessionQuery(scope)}`,
   );
   return body.questions;
 }
@@ -26,6 +32,7 @@ export async function fetchSession(size: number): Promise<PracticeQuestion[]> {
  * biết câu sai để đẩy từ về hàng đợi ôn.
  */
 export function checkAnswer(input: {
+  scope: PracticeScope;
   entryId: string;
   kind: PracticeKind;
   answer: string;
@@ -37,6 +44,9 @@ export function checkAnswer(input: {
       entry_id: input.entryId,
       kind: input.kind,
       answer: input.answer,
+      // Thiếu lesson_id thì API chấm như ôn tập và phạt câu sai — gửi nhầm
+      // phạm vi là đẩy từ của một bài chưa học vào lịch ôn.
+      ...(input.scope.kind === "lesson" ? { lesson_id: input.scope.lessonId } : {}),
     }),
   });
 }

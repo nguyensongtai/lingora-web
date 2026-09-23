@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PracticeScreen } from "@/features/practice/components/practice-screen";
 import { readSession } from "@/features/practice/server";
-import { SESSION_SIZE } from "@/features/practice/types";
 
 export const metadata: Metadata = {
   title: "Luyện tập",
@@ -36,9 +35,9 @@ export default function PracticePage() {
 }
 
 async function Session() {
-  const questions = await readSession(SESSION_SIZE);
+  const questions = await readSession({ kind: "review" });
 
-  return <PracticeScreen initialQuestions={questions} />;
+  return <PracticeScreen scope={{ kind: "review" }} initialQuestions={questions} />;
 }
 
 function PracticeSkeleton() {
