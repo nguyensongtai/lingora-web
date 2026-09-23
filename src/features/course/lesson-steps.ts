@@ -1,6 +1,6 @@
 import type { VocabularyEntry } from "@/features/vocabulary/types";
 
-import type { LessonBlock, LessonDetail } from "./types";
+import type { LessonBlock, LessonBlockKind, LessonDetail } from "./types";
 
 /**
  * Số từ tối thiểu để API dựng được câu trắc nghiệm (MinOptions ở gói practice).
@@ -25,6 +25,23 @@ export type LessonStep =
 
 export type LessonStepKey = LessonStep["key"];
 
+export const STEP_TITLES: Record<LessonStepKey, string> = {
+  vocabulary: "Từ vựng",
+  dialogue: "Hội thoại",
+  usage: "Cách dùng",
+  practice: "Luyện tập",
+};
+
+/**
+ * Mỗi dạng khối rơi vào bước nào. Màn soạn bài đọc đúng bảng này để nói cho
+ * người soạn biết khối họ đang viết sẽ hiện ở đâu.
+ */
+export const BLOCK_STEP: Record<LessonBlockKind, "dialogue" | "usage"> = {
+  note: "usage",
+  example: "usage",
+  dialogue: "dialogue",
+};
+
 /**
  * Dựng các bước cho một bài. Bước nào không có gì để hiện thì bỏ, thay vì hiện
  * một bước rỗng — bước rỗng chính là cảm giác "bài này thiếu gì đó".
@@ -35,24 +52,24 @@ export type LessonStepKey = LessonStep["key"];
 export function buildSteps(lesson: Pick<LessonDetail, "blocks" | "vocabulary">): LessonStep[] {
   const steps: LessonStep[] = [];
   const words = lesson.vocabulary;
-  const dialogue = lesson.blocks.filter((block) => block.kind === "dialogue");
+  const dialogue = lesson.blocks.filter((block) => BLOCK_STEP[block.kind] === "dialogue");
   // Câu mẫu trùng nguyên văn câu ví dụ của một từ thì đã hiện ở bước Từ vựng;
   // hiện lại ở đây chỉ làm bước Cách dùng thành bản sao của bước đầu.
   const shown = new Set(words.map((entry) => normaliseSentence(entry.example)).filter(Boolean));
   // Giữ đúng thứ tự người soạn: ghi chú thường dẫn vào câu mẫu ngay sau nó.
   const usage = lesson.blocks.filter(
     (block) =>
-      block.kind === "note" ||
-      (block.kind === "example" && !shown.has(normaliseSentence(block.text_en))),
+      BLOCK_STEP[block.kind] === "usage" &&
+      !(block.kind === "example" && shown.has(normaliseSentence(block.text_en))),
   );
 
   if (words.length > 0) {
-    steps.push({ key: "vocabulary", title: "Từ vựng", caption: `${words.length} từ`, words });
+    steps.push({ key: "vocabulary", title: STEP_TITLES.vocabulary, caption: `${words.length} từ`, words });
   }
   if (dialogue.length > 0) {
     steps.push({
       key: "dialogue",
-      title: "Hội thoại",
+      title: STEP_TITLES.dialogue,
       caption: `${dialogue.length} lượt`,
       blocks: dialogue,
     });
@@ -61,13 +78,13 @@ export function buildSteps(lesson: Pick<LessonDetail, "blocks" | "vocabulary">):
     const examples = usage.filter((block) => block.kind === "example").length;
     steps.push({
       key: "usage",
-      title: "Cách dùng",
+      title: STEP_TITLES.usage,
       caption: examples > 0 ? `${examples} câu mẫu` : "ghi chú",
       blocks: usage,
     });
   }
   if (words.length >= MIN_PRACTICE_WORDS) {
-    steps.push({ key: "practice", title: "Luyện tập", caption: "tự kiểm tra" });
+    steps.push({ key: "practice", title: STEP_TITLES.practice, caption: "tự kiểm tra" });
   }
   return steps;
 }

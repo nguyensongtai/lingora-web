@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, type ApiErrorBody } from "@/lib/api/client";
 
+import { BLOCK_STEP, STEP_TITLES } from "../lesson-steps";
 import type { LessonBlock, LessonBlockKind } from "../types";
 
 const KIND_LABELS: Record<LessonBlockKind, string> = {
@@ -123,7 +124,9 @@ export function BlockEditor({
               ))}
             </select>
 
-            <span className="text-muted-foreground flex-1 text-xs">#{index + 1}</span>
+            <span className="text-muted-foreground flex-1 text-xs">
+              #{index + 1} · hiện ở bước {STEP_TITLES[BLOCK_STEP[block.kind]]}
+            </span>
 
             <IconButton label="Lên" onClick={() => move(index, -1)} disabled={index === 0}>
               <ArrowUp className="size-4" />
