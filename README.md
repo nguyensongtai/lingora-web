@@ -58,7 +58,7 @@ phía server, và client secret thì hoàn toàn không có mặt trong repo nà
 | `/progress` | đã đăng nhập | XP, chuỗi ngày, biểu đồ 30 ngày, tiến độ từng bậc |
 | `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
 | `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học và danh sách bài |
-| `/lessons/[id]` | đã đăng nhập | **nội dung bài học**: giải thích, câu mẫu, hội thoại |
+| `/lessons/[id]` | đã đăng nhập | **học một bài theo bước**: Từ vựng → Hội thoại → Cách dùng → Luyện tập |
 | `/admin/**` | role `admin` | soạn khoá, bài và từ vựng |
 | `/api/**` | tuỳ route | Route Handler của BFF, xem [Xác thực](#xác-thực) |
 
@@ -71,6 +71,35 @@ vẽ, vì chưa có mô hình dữ liệu nào cho nó.
 nào để soạn. Chấm ở server, không so chuỗi ở client: client có sẵn đáp án trong
 DOM, và server còn phải biết câu sai để đẩy từ về hàng đợi ôn. Trả lời đúng
 **không** đổi lịch ôn; chỉ câu sai mới phạt.
+
+### Một bài học đi theo bước
+
+Theo khuôn Babbel và Busuu, một bài không còn là một trang cuộn dài mà là bốn
+bước: **gặp từ → nghe chúng trong hội thoại → hiểu cách dùng → tự luyện**, và nút
+"Đã xong" nằm ở bước cuối.
+
+Bước **sinh ra từ dữ liệu**, không lưu ở đâu (`features/course/lesson-steps.ts`):
+
+| Bước | Lấy từ |
+| --- | --- |
+| Từ vựng | `vocabulary` của bài |
+| Hội thoại | khối `dialogue` |
+| Cách dùng | khối `note` và `example`, giữ thứ tự người soạn |
+| Luyện tập | câu hỏi dựng từ chính từ vựng của bài, khi có ít nhất ba từ |
+
+Bước không có gì để hiện thì bỏ hẳn chứ không hiện rỗng. Bước ③ tên là "Cách
+dùng" chứ không phải "Ngữ pháp", vì một nửa số bài là bài từ vựng hay sắc thái
+nghĩa. Câu mẫu trùng nguyên văn câu ví dụ của một từ bị ẩn — người học đã thấy
+nó ở bước Từ vựng.
+
+Mọi bước được render sẵn và chỉ ẩn đi: người đang luyện tập quay về bước Từ vựng
+tra một từ thì lượt luyện còn nguyên khi quay lại. Nhảy tới bước nào cũng được,
+và "Đã xong" vẫn là người học tự bấm, không gắn với việc đi hết các bước.
+
+Luyện tập trong bài gọi cùng endpoint với `/practice` nhưng kèm `lesson_id`, và
+**không đụng tới lịch ôn**. `PracticeScope` (`review` | `lesson`) đi xuyên từ
+`readSession` tới `checkAnswer`, để phạm vi — chứ không phải trí nhớ của người
+gọi — quyết định có gửi `lesson_id` hay không: thiếu nó thì câu sai bị phạt.
 
 ### Khi có sự cố
 
@@ -120,6 +149,12 @@ làm hai việc: gia hạn access token khi hết hạn, và chặn đường d�
 — khách bị đẩy sang `/login?next=…` để sau khi đăng nhập quay lại đúng chỗ.
 Tham số `next` chỉ nhận đường dẫn nội bộ, nên không ai dùng nó để đẩy người dùng
 sang tên miền khác.
+
+Đường cần đăng nhập nằm ở **hai danh sách viết tay**: `PROTECTED_PREFIXES` (chặn
+khách) và `config.matcher` (để proxy chạy và gia hạn token ở đó). `/lessons` từng
+lọt cả hai: khách mở được bài học, còn người có access token vừa hết hạn thì mất
+nút "Đã xong" vì không ai gia hạn. `src/proxy.test.ts` giờ đọc thẳng thư mục
+`app/(app)` và đỏ nếu một màn nào thiếu ở một trong hai danh sách.
 
 Route Handler dưới `/api/*` là lớp BFF: nó đọc cookie, gọi API kèm `Bearer`, rồi
 `forward()` **nguyên trạng status và body của API xuống client** — kể cả lỗi.
