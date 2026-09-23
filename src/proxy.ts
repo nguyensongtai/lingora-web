@@ -21,7 +21,7 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/v1"
  * Nhánh bắt buộc phải có phiên. Những đường còn lại trong matcher chỉ ghé qua
  * để gia hạn token nếu có — khách chưa đăng nhập vẫn xem được trang.
  */
-const PROTECTED_PREFIXES = [
+export const PROTECTED_PREFIXES = [
   "/admin",
   "/api/admin",
   "/learn",
@@ -30,6 +30,7 @@ const PROTECTED_PREFIXES = [
   "/progress",
   "/tutor",
   "/courses",
+  "/lessons",
 ];
 
 function isProtected(pathname: string): boolean {
@@ -120,6 +121,7 @@ export const config = {
     "/progress",
     "/tutor",
     "/courses/:path*",
+    "/lessons/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
     "/api/me/:path*",
