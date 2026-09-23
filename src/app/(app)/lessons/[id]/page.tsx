@@ -6,6 +6,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCourse, fetchCourseLessons, fetchLesson } from "@/features/course/api";
 import { LessonBody } from "@/features/course/components/lesson-body";
 import { LessonFooter } from "@/features/course/components/lesson-footer";
+import { LessonStepper } from "@/features/course/components/lesson-stepper";
+import { LessonWords } from "@/features/course/components/lesson-words";
+import { buildSteps, type LessonStep } from "@/features/course/lesson-steps";
+import { PracticeScreen } from "@/features/practice/components/practice-screen";
+import { readSession } from "@/features/practice/server";
+import type { PracticeQuestion } from "@/features/practice/types";
 import { readProgress } from "@/features/progress/server";
 import { handleMissing } from "@/lib/api/missing";
 import { readCurrentUser } from "@/lib/auth/current-user";
@@ -35,13 +41,30 @@ async function Lesson({ params }: { params: PageProps<"/lessons/[id]">["params"]
   const { id } = await params;
 
   const lesson = await fetchLesson(id).catch(handleMissing);
+  const steps = buildSteps(lesson);
+  const practises = steps.some((step) => step.key === "practice");
+
   // Khoá và danh sách bài chỉ cần sau khi biết bài thuộc khoá nào.
-  const [course, siblings, progress, user] = await Promise.all([
+  const [course, siblings, progress, user, questions] = await Promise.all([
     fetchCourse(lesson.course_id).catch(handleMissing),
     fetchCourseLessons(lesson.course_id).catch(handleMissing),
     readProgress(),
     readCurrentUser(),
+    // Luyện tập hỏng thì chỉ bước đó báo lỗi; cả bài không được sập theo.
+    practises
+      ? readSession({ kind: "lesson", lessonId: lesson.id }).catch(() => null)
+      : Promise.resolve(null),
   ]);
+
+  const footer = (
+    <LessonFooter
+      lesson={lesson}
+      courseId={course.id}
+      siblings={siblings.items}
+      initialProgress={progress}
+      canTrack={user !== null}
+    />
+  );
 
   return (
     <>
@@ -60,17 +83,52 @@ async function Lesson({ params }: { params: PageProps<"/lessons/[id]">["params"]
         ) : null}
       </div>
 
-      <LessonBody blocks={lesson.blocks} />
-
-      <LessonFooter
-        lesson={lesson}
-        courseId={course.id}
-        siblings={siblings.items}
-        initialProgress={progress}
-        canTrack={user !== null}
-      />
+      {steps.length === 0 ? (
+        <>
+          <p className="text-muted-foreground border-border bg-card rounded-card border px-4 py-8 text-center text-sm">
+            Bài này chưa có nội dung.
+          </p>
+          {footer}
+        </>
+      ) : (
+        <LessonStepper
+          finish={footer}
+          steps={steps.map((step) => ({
+            key: step.key,
+            title: step.title,
+            caption: step.caption,
+            panel: <StepPanel step={step} lessonId={lesson.id} questions={questions} />,
+          }))}
+        />
+      )}
     </>
   );
+}
+
+function StepPanel({
+  step,
+  lessonId,
+  questions,
+}: {
+  step: LessonStep;
+  lessonId: string;
+  questions: PracticeQuestion[] | null;
+}) {
+  switch (step.key) {
+    case "vocabulary":
+      return <LessonWords words={step.words} />;
+    case "dialogue":
+    case "usage":
+      return <LessonBody blocks={step.blocks} />;
+    case "practice":
+      return questions === null ? (
+        <p className="bg-danger-soft text-danger rounded-xl px-4 py-3 text-sm">
+          Chưa tải được phần luyện tập. Tải lại trang để thử lại.
+        </p>
+      ) : (
+        <PracticeScreen scope={{ kind: "lesson", lessonId }} initialQuestions={questions} />
+      );
+  }
 }
 
 function LessonSkeleton() {

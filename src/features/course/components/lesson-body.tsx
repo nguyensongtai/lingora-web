@@ -1,5 +1,7 @@
 import { PronounceButton } from "@/features/vocabulary/components/pronounce-button";
+import { cn } from "@/lib/utils";
 
+import { speakerSides } from "../lesson-steps";
 import type { LessonBlock } from "../types";
 
 /**
@@ -7,24 +9,20 @@ import type { LessonBlock } from "../types";
  * component chứ không phải một component có ba nhánh style.
  */
 export function LessonBody({ blocks }: { blocks: LessonBlock[] }) {
-  if (blocks.length === 0) {
-    return (
-      <p className="text-muted-foreground border-border bg-card rounded-card border px-4 py-8 text-center text-sm">
-        Bài này chưa có nội dung.
-      </p>
-    );
-  }
+  // Hội thoại xếp hai bên như khung chat: người nói trước bên trái. Nhìn vào là
+  // biết ai đang nói mà không phải đọc tên từng lượt.
+  const sides = speakerSides(blocks);
 
   return (
     <div className="flex flex-col gap-4">
       {blocks.map((block, index) => (
-        <Block key={block.id ?? index} block={block} />
+        <Block key={block.id ?? index} block={block} side={sides.get(block.speaker)} />
       ))}
     </div>
   );
 }
 
-function Block({ block }: { block: LessonBlock }) {
+function Block({ block, side }: { block: LessonBlock; side?: "start" | "end" }) {
   switch (block.kind) {
     case "note":
       return <Note body={block.body} />;
@@ -32,6 +30,7 @@ function Block({ block }: { block: LessonBlock }) {
       return (
         <Line
           speaker={block.speaker}
+          side={side}
           textEn={block.text_en}
           textVi={block.text_vi}
         />
@@ -56,15 +55,23 @@ function Note({ body }: { body: string }) {
  */
 function Line({
   speaker,
+  side,
   textEn,
   textVi,
 }: {
   speaker?: string;
+  side?: "start" | "end";
   textEn: string;
   textVi: string;
 }) {
   return (
-    <div className="border-border bg-card rounded-card flex items-start gap-3 border p-4">
+    <div
+      className={cn(
+        "border-border bg-card rounded-card flex items-start gap-3 border p-4",
+        side && "w-[88%]",
+        side === "end" && "bg-brand-soft self-end",
+      )}
+    >
       <div className="min-w-0 flex-1">
         {speaker ? (
           <span className="text-brand-strong mb-0.5 block text-[13px] font-semibold">

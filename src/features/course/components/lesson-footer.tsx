@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 import type { Lesson, LessonDetail } from "../types";
 
 /**
- * Nút đánh dấu xong và lối đi tiếp. Đặt ở cuối bài vì đó là lúc người học thật
- * sự xong — nút ở đầu bài chỉ mời người ta bấm trước khi đọc.
+ * Nút đánh dấu xong và lối đi tiếp. Nằm ở bước cuối của bài vì đó là lúc người
+ * học thật sự xong — nút ở đầu bài chỉ mời người ta bấm trước khi đọc.
  */
 export function LessonFooter({
   lesson,
