@@ -1,12 +1,21 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import type { LessonStepKey } from "../lesson-steps";
+import { STEP_HASHES, stepIndexFromHash, type LessonStepKey } from "../lesson-steps";
+
+function subscribeToHash(onChange: () => void): () => void {
+  window.addEventListener("hashchange", onChange);
+  return () => window.removeEventListener("hashchange", onChange);
+}
+
+function readHash(): string {
+  return window.location.hash;
+}
 
 export type StepperStep = {
   key: LessonStepKey;
@@ -26,30 +35,41 @@ export type StepperStep = {
  * bấm, không gắn với việc đã đi hết các bước (người dùng đã chốt như vậy).
  */
 export function LessonStepper({ steps, finish }: { steps: StepperStep[]; finish: ReactNode }) {
-  const [current, setCurrent] = useState(0);
-  const [visited, setVisited] = useState<ReadonlySet<number>>(() => new Set([0]));
+  // Bước mở ra lấy từ hash trên URL cho tới khi người học tự chọn bước. Đọc
+  // qua useSyncExternalStore: server không thấy hash, và phía client phải
+  // khớp server lúc hydrate rồi mới chuyển sang giá trị thật.
+  const hash = useSyncExternalStore(subscribeToHash, readHash, () => "");
+  const fromHash = stepIndexFromHash(
+    steps.map((step) => step.key),
+    hash,
+  );
+  const [chosen, setChosen] = useState<number | null>(null);
+  const current = chosen ?? Math.max(fromHash, 0);
+
+  const [visited, setVisited] = useState<ReadonlySet<number>>(() => new Set());
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const moved = useRef(false);
 
   // Bấm "Tiếp" ở cuối một bước dài thì bước mới hiện ra mà mắt vẫn ở đáy
   // trang. Đưa thanh các bước về tầm nhìn nếu nó đã trôi lên khỏi màn hình, và
-  // chuyển focus sang bước mới cho trình đọc màn hình. Bỏ qua lần render đầu:
-  // mở trang ra không được tự cuộn đi đâu cả.
+  // chuyển focus sang bước mới cho trình đọc màn hình. Chỉ khi người học tự
+  // chuyển bước: mở trang ra không được tự cuộn đi đâu cả.
   useEffect(() => {
-    if (!moved.current) {
+    if (chosen === null) {
       return;
     }
     panelRef.current?.focus({ preventScroll: true });
     if (rootRef.current && rootRef.current.getBoundingClientRect().top < 0) {
       rootRef.current.scrollIntoView({ block: "start" });
     }
-  }, [current]);
+  }, [chosen]);
 
   function go(index: number) {
-    moved.current = true;
-    setCurrent(index);
-    setVisited((seen) => new Set(seen).add(index));
+    setVisited((seen) => new Set(seen).add(current));
+    setChosen(index);
+    // replaceState chứ không pushState: bấm Back là rời bài, không phải lùi
+    // qua từng bước đã bấm.
+    window.history.replaceState(null, "", `#${STEP_HASHES[steps[index].key]}`);
   }
 
   const last = steps.length - 1;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { VocabularyEntry } from "@/features/vocabulary/types";
 
-import { MIN_PRACTICE_WORDS, buildSteps, speakerSides } from "./lesson-steps";
+import { MIN_PRACTICE_WORDS, buildSteps, speakerSides, stepIndexFromHash } from "./lesson-steps";
 import type { LessonBlock } from "./types";
 
 function note(body: string): LessonBlock {
@@ -122,5 +122,21 @@ describe("speakerSides", () => {
 
     expect(sides.get("Tom")).toBe("start");
     expect(sides.get("Mai")).toBe("end");
+  });
+});
+
+describe("stepIndexFromHash", () => {
+  const keys = ["vocabulary", "usage", "practice"] as const;
+
+  it("tìm đúng bước theo hash, có hay không có dấu #", () => {
+    expect(stepIndexFromHash(keys, "#luyen-tap")).toBe(2);
+    expect(stepIndexFromHash(keys, "cach-dung")).toBe(1);
+  });
+
+  // Bài này bỏ bước Hội thoại, nên link #hoi-thoai gửi từ bài khác không được
+  // nhảy lệch sang một bước khác.
+  it("trả -1 khi bài không có bước đó", () => {
+    expect(stepIndexFromHash(keys, "#hoi-thoai")).toBe(-1);
+    expect(stepIndexFromHash(keys, "")).toBe(-1);
   });
 });

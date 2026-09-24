@@ -33,6 +33,23 @@ export const STEP_TITLES: Record<LessonStepKey, string> = {
 };
 
 /**
+ * Mảnh URL của từng bước (#tu-vung…). Tải lại trang hay gửi link cho bạn thì
+ * vẫn mở đúng bước — người đang luyện tập dở không bị đẩy về bước Từ vựng.
+ */
+export const STEP_HASHES: Record<LessonStepKey, string> = {
+  vocabulary: "tu-vung",
+  dialogue: "hoi-thoai",
+  usage: "cach-dung",
+  practice: "luyen-tap",
+};
+
+/** Vị trí của bước ứng với một hash; -1 khi hash không khớp bước nào của bài. */
+export function stepIndexFromHash(keys: readonly LessonStepKey[], hash: string): number {
+  const wanted = hash.replace(/^#/, "");
+  return keys.findIndex((key) => STEP_HASHES[key] === wanted);
+}
+
+/**
  * Mỗi dạng khối rơi vào bước nào. Màn soạn bài đọc đúng bảng này để nói cho
  * người soạn biết khối họ đang viết sẽ hiện ở đâu.
  */
