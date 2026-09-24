@@ -10,6 +10,7 @@ import {
   useVocabularyStats,
 } from "../hooks/use-vocabulary";
 import {
+  NEW_WORDS_PER_DAY,
   STATE_LABELS,
   VOCABULARY_STATES,
   estimateMinutes,
@@ -50,6 +51,14 @@ export function VocabularyScreen({
               ? "Không có từ nào đến hạn ôn hôm nay."
               : `${due.length} từ đến hạn ôn hôm nay · khoảng ${estimateMinutes(due.length)} phút`}
           </p>
+          {/* Không nói ra thì người vừa học xong ba bài sẽ thấy từ của mình
+              "biến mất" khỏi hàng đợi. */}
+          {stats.waiting > 0 ? (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {stats.waiting} từ mới đang chờ lượt — mỗi ngày tối đa{" "}
+              {NEW_WORDS_PER_DAY} từ mới vào hàng đợi, theo thứ tự bạn đã học.
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -126,12 +135,18 @@ export function VocabularyScreen({
                       <span
                         className={cn(
                           "text-[11px] font-semibold",
-                          card.review === null
-                            ? "text-success"
-                            : "text-brand-strong",
+                          card.state === "waiting"
+                            ? "text-muted-foreground"
+                            : card.review === null
+                              ? "text-success"
+                              : "text-brand-strong",
                         )}
                       >
-                        {card.review === null ? "Mới" : STATE_LABELS[card.state]}
+                        {card.state === "waiting"
+                          ? STATE_LABELS.waiting
+                          : card.review === null
+                            ? "Mới"
+                            : STATE_LABELS[card.state]}
                       </span>
                     </div>
                   </li>

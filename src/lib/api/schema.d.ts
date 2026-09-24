@@ -568,11 +568,13 @@ export interface components {
             redirect_uri: string;
         };
         /**
-         * @description `due` đến hạn ôn (kể cả từ chưa ôn lần nào), `learning` đang học,
-         *     `mastered` khoảng cách ôn đã từ 21 ngày trở lên.
+         * @description `due` đến hạn ôn, `learning` đang học, `mastered` khoảng cách ôn đã từ
+         *     21 ngày trở lên, `waiting` từ mới chưa tới lượt. Mỗi ngày tối đa 20 từ
+         *     chưa ôn lần nào được vào nhóm `due`; phần còn lại là `waiting` và lần
+         *     lượt vào hàng đợi những ngày sau, theo thứ tự đã học.
          * @enum {string}
          */
-        VocabularyState: "due" | "learning" | "mastered";
+        VocabularyState: "due" | "learning" | "mastered" | "waiting";
         VocabularyEntry: {
             /** Format: uuid */
             id: string;
@@ -645,6 +647,11 @@ export interface components {
             mastered: number;
             /** Format: int64 */
             new_this_week: number;
+            /**
+             * Format: int64
+             * @description Từ mới đã mở khoá nhưng vượt trần 20 từ mới của hôm nay.
+             */
+            waiting: number;
         };
         VocabularyReviewRequest: {
             /** @enum {string} */

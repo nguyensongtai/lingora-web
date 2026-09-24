@@ -13,18 +13,24 @@ export const EMPTY_STATS: VocabularyStats = {
   due_today: 0,
   mastered: 0,
   new_this_week: 0,
+  waiting: 0,
 };
+
+/** Số từ mới tối đa vào hàng đợi mỗi ngày; khớp NewWordsPerDay của API. */
+export const NEW_WORDS_PER_DAY = 20;
 
 export const STATE_LABELS: Record<VocabularyState, string> = {
   due: "Đến hạn",
   learning: "Đang học",
   mastered: "Thành thạo",
+  waiting: "Chờ lượt",
 };
 
 export const VOCABULARY_STATES: readonly VocabularyState[] = [
   "due",
   "learning",
   "mastered",
+  "waiting",
 ];
 
 /** Nhịp đọc trung bình của một lượt ôn, dùng để ước lượng thời gian. */
