@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { ApiErrorBody } from "@/lib/api/client";
 import { apiBaseUrl } from "@/lib/api/client";
+import { clientIPHeaders } from "@/lib/api/client-ip";
 import type { components } from "@/lib/api/schema";
 import { writeSession } from "@/lib/auth/session";
 
@@ -31,7 +32,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const upstream = await fetch(`${apiBaseUrl}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    // Hạn mức đăng nhập theo IP phải đếm người dùng, không đếm máy chủ web.
+    headers: { "Content-Type": "application/json", ...clientIPHeaders(request) },
     body: JSON.stringify(credentials),
     cache: "no-store",
   });
