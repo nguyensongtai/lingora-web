@@ -27,4 +27,6 @@ export const KIND_LABELS: Record<PracticeKind, string> = {
   multiple_choice: "Chọn nghĩa đúng",
   fill_blank: "Điền từ còn thiếu",
   listen_choose: "Nghe và chọn từ",
+  listen_write: "Nghe và viết từ",
+  dictation: "Nghe và chép lại câu",
 };

@@ -837,8 +837,14 @@ export interface components {
             /** Format: int64 */
             completed_lessons: number;
         };
-        /** @enum {string} */
-        PracticeKind: "multiple_choice" | "fill_blank" | "listen_choose";
+        /**
+         * @description `multiple_choice` chọn nghĩa; `fill_blank` gõ từ còn thiếu trong câu;
+         *     `listen_choose` nghe rồi chọn từ; `listen_write` nghe rồi gõ từ;
+         *     `dictation` nghe cả câu rồi gõ lại cả câu (chấm bỏ qua hoa/thường, dấu
+         *     câu và khoảng trắng thừa — sai chính tả vẫn là sai).
+         * @enum {string}
+         */
+        PracticeKind: "multiple_choice" | "fill_blank" | "listen_choose" | "listen_write" | "dictation";
         PracticeQuestion: {
             /** Format: uuid */
             entry_id: string;
@@ -851,14 +857,24 @@ export interface components {
              */
             word: string;
             /**
-             * @description Câu dẫn. `multiple_choice`: chính từ đó. `fill_blank`: câu ví dụ đã
-             *     khoét chỗ trống. `listen_choose`: chuỗi rỗng, câu dẫn là âm thanh.
+             * @description Câu dẫn để HIỆN ra. `multiple_choice`: chính từ đó. `fill_blank`:
+             *     câu ví dụ đã khoét chỗ trống. Ba dạng nghe: chuỗi rỗng, câu dẫn là
+             *     âm thanh.
              */
             prompt: string;
-            /** @description Gợi ý thêm; hiện chỉ `fill_blank` dùng, để hiện nghĩa tiếng Việt. */
+            /**
+             * @description Gợi ý thêm: nghĩa tiếng Việt với `fill_blank`, bản dịch của câu với
+             *     `dictation`. Rỗng với dạng khác.
+             */
             hint: string;
-            /** @description Rỗng với `fill_blank` vì dạng đó gõ tay. */
+            /** @description Rỗng với các dạng gõ tay (`fill_blank`, `listen_write`, `dictation`). */
             options: string[];
+            /**
+             * @description Chữ để trình duyệt đọc lên với ba dạng nghe: từ với `listen_choose` và
+             *     `listen_write`, cả câu với `dictation`. Rỗng với dạng khác. Tách
+             *     khỏi `prompt` vì `prompt` là thứ được hiện ra.
+             */
+            speak: string;
         };
         /**
          * @description Câu hỏi sinh tại chỗ từ vốn từ người học đã mở khoá — không có bảng câu

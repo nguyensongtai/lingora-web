@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { checkAnswer, fetchSession } from "../api";
 import {
   KIND_LABELS,
+  type PracticeKind,
   type PracticeQuestion,
   type PracticeResult,
   type PracticeScope,
@@ -112,8 +113,9 @@ export function PracticeScreen({
 
         <Prompt question={question} />
 
-        {question.kind === "fill_blank" ? (
-          <FillBlank
+        {TYPED_KINDS.has(question.kind) ? (
+          <TypedAnswer
+            kind={question.kind}
             value={typed}
             onChange={setTyped}
             onSubmit={() => void submit(typed)}
@@ -139,9 +141,25 @@ export function PracticeScreen({
   );
 }
 
+/** Các dạng gõ tay; còn lại là chọn một trong các lựa chọn. */
+const TYPED_KINDS: ReadonlySet<PracticeKind> = new Set(["fill_blank", "listen_write", "dictation"]);
+
 function Prompt({ question }: { question: PracticeQuestion }) {
-  if (question.kind === "listen_choose") {
-    return <SpeakButton word={question.word} />;
+  // Ba dạng nghe đọc question.speak chứ không hiện nó: hiện chữ ra là đưa
+  // luôn đáp án.
+  if (question.kind === "listen_choose" || question.kind === "listen_write") {
+    return <Listen text={question.speak} />;
+  }
+
+  if (question.kind === "dictation") {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <Listen text={question.speak} />
+        {question.hint ? (
+          <p className="text-muted-foreground text-center text-sm">Nghĩa: {question.hint}</p>
+        ) : null}
+      </div>
+    );
   }
 
   if (question.kind === "fill_blank") {
@@ -167,15 +185,39 @@ function Prompt({ question }: { question: PracticeQuestion }) {
  * Đọc bằng speechSynthesis của trình duyệt, giống màn Từ vựng — không cần file
  * âm thanh hay dịch vụ ngoài. Máy không hỗ trợ thì nút không làm gì.
  */
+function speakAloud(text: string, rate = 1) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return;
+  }
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = rate;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+/**
+ * Nút nghe cho các dạng nghe, kèm nút đọc chậm: chép cả câu ở tốc độ thường là
+ * quá sức với người mới, và nghe lại chậm là cách người ta vẫn học chính tả.
+ */
+function Listen({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <SpeakButton word={text} />
+      <button
+        type="button"
+        onClick={() => speakAloud(text, 0.6)}
+        className="text-brand-strong text-sm font-semibold hover:underline"
+      >
+        Nghe chậm
+      </button>
+    </div>
+  );
+}
+
 function SpeakButton({ word, compact }: { word: string; compact?: boolean }) {
   function speak() {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    speakAloud(word);
   }
 
   return (
@@ -230,12 +272,20 @@ function Options({
   );
 }
 
-function FillBlank({
+const TYPED_COPY: Partial<Record<PracticeKind, { placeholder: string; label: string }>> = {
+  fill_blank: { placeholder: "Gõ từ còn thiếu", label: "Từ còn thiếu" },
+  listen_write: { placeholder: "Gõ từ vừa nghe", label: "Từ vừa nghe" },
+  dictation: { placeholder: "Gõ lại cả câu vừa nghe", label: "Câu vừa nghe" },
+};
+
+function TypedAnswer({
+  kind,
   value,
   onChange,
   onSubmit,
   disabled,
 }: {
+  kind: PracticeKind;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -247,19 +297,20 @@ function FillBlank({
         event.preventDefault();
         onSubmit();
       }}
-      className="flex gap-2"
+      // Cả một câu không vừa ô nhập nằm ngang trên màn điện thoại.
+      className={cn("flex gap-2", kind === "dictation" && "flex-col app:flex-row")}
     >
       <Input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
-        placeholder="Gõ từ còn thiếu"
+        placeholder={TYPED_COPY[kind]?.placeholder}
         autoComplete="off"
         autoCapitalize="none"
         // Trình duyệt tự sửa chính tả sẽ chữa hộ người học — mất hết ý nghĩa
         // của việc kiểm tra xem họ có nhớ mặt chữ hay không.
         spellCheck={false}
-        aria-label="Từ còn thiếu"
+        aria-label={TYPED_COPY[kind]?.label}
         className="h-11 flex-1"
       />
       <Button type="submit" disabled={disabled || value.trim() === ""}>
