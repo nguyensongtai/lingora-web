@@ -389,6 +389,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/practice/scores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Điểm luyện tập tốt nhất ở mọi bài */
+        get: operations["listLessonPracticeScores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/practice/lessons/{lessonId}/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Ghi kết quả một lượt luyện trong bài
+         * @description Giữ điểm cao nhất; không cộng XP. `total` phải đúng bằng số câu một
+         *     lượt của bài (mọi từ của bài, tối đa 30). Số từ của bài đã đổi thì
+         *     điểm cũ bị thay thay vì so tiếp.
+         */
+        put: operations["recordLessonPracticeScore"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/progress/history": {
         parameters: {
             query?: never;
@@ -904,6 +943,20 @@ export interface components {
              *     phải ôn.
              */
             lesson_id?: string;
+        };
+        LessonPracticeResult: {
+            correct: number;
+            total: number;
+        };
+        LessonPracticeScore: {
+            /** Format: uuid */
+            lesson_id: string;
+            best_correct: number;
+            total: number;
+            attempts: number;
+        };
+        LessonPracticeScoreList: {
+            items: components["schemas"]["LessonPracticeScore"][];
         };
         PracticeResult: {
             correct: boolean;
@@ -1679,6 +1732,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PracticeResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listLessonPracticeScores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Điểm của người đang đăng nhập, bài luyện gần nhất trước */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPracticeScoreList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    recordLessonPracticeScore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonPracticeResult"];
+            };
+        };
+        responses: {
+            /** @description Điểm tốt nhất sau khi ghi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonPracticeScore"];
                 };
             };
             400: components["responses"]["BadRequest"];

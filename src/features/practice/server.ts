@@ -4,7 +4,12 @@ import { cache } from "react";
 
 import { serverFetch } from "@/lib/api/server-client";
 
-import { sessionQuery, type PracticeQuestion, type PracticeScope } from "./types";
+import {
+  sessionQuery,
+  type LessonPracticeScore,
+  type PracticeQuestion,
+  type PracticeScope,
+} from "./types";
 
 /**
  * Phiên đầu tiên đọc sẵn ở server để người học thấy câu hỏi ngay trong HTML
@@ -30,4 +35,19 @@ const readSessionByQuery = cache(async function readSessionByQuery(
 
   const body = (await response.json()) as { questions: PracticeQuestion[] };
   return body.questions;
+});
+
+/**
+ * Điểm luyện tập tốt nhất ở mọi bài. Hỏng thì trả danh sách rỗng: điểm chỉ là
+ * thông tin phụ, không đáng làm sập trang bài hay trang khoá.
+ */
+export const readLessonScores = cache(async function readLessonScores(): Promise<
+  LessonPracticeScore[]
+> {
+  const response = await serverFetch("/me/practice/scores").catch(() => null);
+  if (!response?.ok) {
+    return [];
+  }
+  const body = (await response.json()) as { items: LessonPracticeScore[] };
+  return body.items;
 });

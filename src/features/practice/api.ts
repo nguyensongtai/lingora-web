@@ -2,6 +2,7 @@ import { ApiError, type ApiErrorBody } from "@/lib/api/client";
 
 import {
   sessionQuery,
+  type LessonPracticeScore,
   type PracticeKind,
   type PracticeQuestion,
   type PracticeResult,
@@ -49,4 +50,28 @@ export function checkAnswer(input: {
       ...(input.scope.kind === "lesson" ? { lesson_id: input.scope.lessonId } : {}),
     }),
   });
+}
+
+export async function fetchLessonScores(signal?: AbortSignal): Promise<LessonPracticeScore[]> {
+  const body = await callMe<{ items: LessonPracticeScore[] }>("/api/me/practice/scores", { signal });
+  return body.items;
+}
+
+/**
+ * Ghi kết quả một lượt luyện trong bài. Điểm do phía trước đếm — server chấm
+ * từng câu nhưng không giữ phiên — và không đổi ra XP.
+ */
+export function recordLessonScore(input: {
+  lessonId: string;
+  correct: number;
+  total: number;
+}): Promise<LessonPracticeScore> {
+  return callMe<LessonPracticeScore>(
+    `/api/me/practice/lessons/${encodeURIComponent(input.lessonId)}/score`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correct: input.correct, total: input.total }),
+    },
+  );
 }

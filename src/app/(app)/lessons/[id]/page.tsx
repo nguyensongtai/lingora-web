@@ -10,8 +10,8 @@ import { LessonStepper } from "@/features/course/components/lesson-stepper";
 import { LessonWords } from "@/features/course/components/lesson-words";
 import { buildSteps, type LessonStep } from "@/features/course/lesson-steps";
 import { PracticeScreen } from "@/features/practice/components/practice-screen";
-import { readSession } from "@/features/practice/server";
-import type { PracticeQuestion } from "@/features/practice/types";
+import { readLessonScores, readSession } from "@/features/practice/server";
+import type { LessonPracticeScore, PracticeQuestion } from "@/features/practice/types";
 import { readProgress } from "@/features/progress/server";
 import { handleMissing } from "@/lib/api/missing";
 import { readCurrentUser } from "@/lib/auth/current-user";
@@ -45,7 +45,7 @@ async function Lesson({ params }: { params: PageProps<"/lessons/[id]">["params"]
   const practises = steps.some((step) => step.key === "practice");
 
   // Khoá và danh sách bài chỉ cần sau khi biết bài thuộc khoá nào.
-  const [course, siblings, progress, user, questions] = await Promise.all([
+  const [course, siblings, progress, user, questions, scores] = await Promise.all([
     fetchCourse(lesson.course_id).catch(handleMissing),
     fetchCourseLessons(lesson.course_id).catch(handleMissing),
     readProgress(),
@@ -54,6 +54,7 @@ async function Lesson({ params }: { params: PageProps<"/lessons/[id]">["params"]
     practises
       ? readSession({ kind: "lesson", lessonId: lesson.id }).catch(() => null)
       : Promise.resolve(null),
+    practises ? readLessonScores() : Promise.resolve([]),
   ]);
 
   const footer = (
@@ -97,7 +98,9 @@ async function Lesson({ params }: { params: PageProps<"/lessons/[id]">["params"]
             key: step.key,
             title: step.title,
             caption: step.caption,
-            panel: <StepPanel step={step} lessonId={lesson.id} questions={questions} />,
+            panel: (
+              <StepPanel step={step} lessonId={lesson.id} questions={questions} scores={scores} />
+            ),
           }))}
         />
       )}
@@ -109,10 +112,12 @@ function StepPanel({
   step,
   lessonId,
   questions,
+  scores,
 }: {
   step: LessonStep;
   lessonId: string;
   questions: PracticeQuestion[] | null;
+  scores: LessonPracticeScore[];
 }) {
   switch (step.key) {
     case "vocabulary":
@@ -126,7 +131,11 @@ function StepPanel({
           Chưa tải được phần luyện tập. Tải lại trang để thử lại.
         </p>
       ) : (
-        <PracticeScreen scope={{ kind: "lesson", lessonId }} initialQuestions={questions} />
+        <PracticeScreen
+          scope={{ kind: "lesson", lessonId }}
+          initialQuestions={questions}
+          initialScores={scores}
+        />
       );
   }
 }

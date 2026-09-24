@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { checkAnswer, fetchSession } from "./api";
+import { checkAnswer, fetchSession, recordLessonScore } from "./api";
 import { SESSION_SIZE, sessionQuery } from "./types";
 
 afterEach(() => {
@@ -71,5 +71,18 @@ describe("checkAnswer", () => {
     });
 
     expect(JSON.parse(calls[0].init.body as string)).not.toHaveProperty("lesson_id");
+  });
+});
+
+describe("recordLessonScore", () => {
+  it("PUT điểm của đúng bài, chỉ gửi correct và total", async () => {
+    const calls = captureFetch({ lesson_id: "l-1", best_correct: 5, total: 6, attempts: 1 });
+
+    const saved = await recordLessonScore({ lessonId: "l-1", correct: 5, total: 6 });
+
+    expect(calls[0].url).toBe("/api/me/practice/lessons/l-1/score");
+    expect(calls[0].init.method).toBe("PUT");
+    expect(JSON.parse(calls[0].init.body as string)).toEqual({ correct: 5, total: 6 });
+    expect(saved.best_correct).toBe(5);
   });
 });

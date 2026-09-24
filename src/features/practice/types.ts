@@ -3,6 +3,7 @@ import type { components } from "@/lib/api/schema";
 export type PracticeQuestion = components["schemas"]["PracticeQuestion"];
 export type PracticeKind = components["schemas"]["PracticeKind"];
 export type PracticeResult = components["schemas"]["PracticeResult"];
+export type LessonPracticeScore = components["schemas"]["LessonPracticeScore"];
 
 /** Số câu mỗi lượt; khớp mặc định của API. */
 export const SESSION_SIZE = 10;

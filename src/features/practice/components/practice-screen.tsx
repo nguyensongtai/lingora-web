@@ -1,15 +1,17 @@
 "use client";
 
 import { Check, RotateCcw, Volume2, X } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { checkAnswer, fetchSession } from "../api";
+import { scoreOf, useLessonScores, useRecordLessonScore } from "../hooks/use-lesson-scores";
 import {
   KIND_LABELS,
+  type LessonPracticeScore,
   type PracticeKind,
   type PracticeQuestion,
   type PracticeResult,
@@ -25,9 +27,12 @@ type Phase =
 export function PracticeScreen({
   scope,
   initialQuestions,
+  initialScores = [],
 }: {
   scope: PracticeScope;
   initialQuestions: PracticeQuestion[];
+  /** Chỉ dùng ở lượt luyện trong bài, để hiện điểm tốt nhất của bài đó. */
+  initialScores?: LessonPracticeScore[];
 }) {
   const [questions, setQuestions] = useState(initialQuestions);
   const [index, setIndex] = useState(0);
@@ -35,6 +40,7 @@ export function PracticeScreen({
   const [phase, setPhase] = useState<Phase>({ name: "answering" });
   const [score, setScore] = useState({ correct: 0, wrong: 0 });
   const [loadingNext, setLoadingNext] = useState(false);
+  const record = useRecordLessonScore();
 
   const question = questions[index];
   const finished = question === undefined;
@@ -66,6 +72,11 @@ export function PracticeScreen({
   }
 
   function next() {
+    // Xong câu cuối của lượt luyện trong bài thì ghi điểm. Lúc này score đã
+    // tính cả câu cuối — nó được cộng ngay khi chấm, trước khi bấm nút này.
+    if (index + 1 === questions.length && scope.kind === "lesson") {
+      record.mutate({ lessonId: scope.lessonId, correct: score.correct, total: questions.length });
+    }
     setTyped("");
     setPhase({ name: "answering" });
     setIndex((current) => current + 1);
@@ -79,6 +90,7 @@ export function PracticeScreen({
       setTyped("");
       setScore({ correct: 0, wrong: 0 });
       setPhase({ name: "answering" });
+      record.reset();
     } catch {
       setPhase({ name: "failed" });
     } finally {
@@ -98,12 +110,25 @@ export function PracticeScreen({
         total={questions.length}
         onRestart={restart}
         busy={loadingNext}
+        best={
+          scope.kind === "lesson" ? (
+            <LessonBest
+              lessonId={scope.lessonId}
+              initialScores={initialScores}
+              saving={record.isPending}
+              failed={record.isError}
+            />
+          ) : null
+        }
       />
     );
   }
 
   return (
     <div className="flex flex-col gap-5">
+      {scope.kind === "lesson" && index === 0 && phase.name === "answering" ? (
+        <LessonBest lessonId={scope.lessonId} initialScores={initialScores} />
+      ) : null}
       <Progress done={index} total={questions.length} score={score} />
 
       <div className="border-border bg-card rounded-card flex flex-col gap-5 border p-5 app:p-6">
@@ -397,7 +422,9 @@ function Summary({
   total,
   onRestart,
   busy,
+  best,
 }: {
+  best: ReactNode;
   scope: PracticeScope;
   score: { correct: number; wrong: number };
   total: number;
@@ -415,11 +442,50 @@ function Summary({
       <p className="text-muted-foreground max-w-90 text-sm">
         {summaryNote(scope, score.wrong)}
       </p>
+      {best}
       <Button onClick={onRestart} disabled={busy} size="lg">
         <RotateCcw className="size-4" />
         {busy ? "Đang dựng lượt mới…" : "Luyện lượt nữa"}
       </Button>
     </div>
+  );
+}
+
+/**
+ * Điểm tốt nhất của bài, đọc từ query dùng chung với danh sách bài: xong một
+ * lượt thì cả hai chỗ đổi cùng lúc. Không cộng XP — chỉ để người học thấy mình
+ * đã nắm bài tới đâu.
+ */
+function LessonBest({
+  lessonId,
+  initialScores,
+  saving = false,
+  failed = false,
+}: {
+  lessonId: string;
+  initialScores: LessonPracticeScore[];
+  saving?: boolean;
+  failed?: boolean;
+}) {
+  const { data: scores } = useLessonScores(initialScores);
+  const best = scoreOf(scores, lessonId);
+
+  if (saving) {
+    return <p className="text-muted-foreground text-sm">Đang lưu điểm…</p>;
+  }
+  if (failed) {
+    return <p className="text-danger text-sm">Chưa lưu được điểm lượt này.</p>;
+  }
+  if (!best) {
+    return null;
+  }
+  return (
+    <p className="text-muted-foreground text-sm">
+      Điểm cao nhất của bạn ở bài này:{" "}
+      <span className="text-foreground font-semibold tabular-nums">
+        {best.best_correct}/{best.total}
+      </span>
+    </p>
   );
 }
 

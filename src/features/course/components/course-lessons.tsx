@@ -8,6 +8,9 @@ import { useProgress } from "@/features/progress/hooks/use-progress";
 import { completedSetOf, type ProgressSnapshot } from "@/features/progress/types";
 import { cn } from "@/lib/utils";
 
+import { scoreOf, useLessonScores } from "@/features/practice/hooks/use-lesson-scores";
+import type { LessonPracticeScore } from "@/features/practice/types";
+
 import { LessonStatus } from "./lesson-status";
 
 /**
@@ -18,15 +21,18 @@ import { LessonStatus } from "./lesson-status";
 export function CourseLessons({
   lessons,
   initialProgress,
+  initialScores,
   canTrack,
 }: {
   lessons: Lesson[];
   initialProgress: ProgressSnapshot;
+  initialScores: LessonPracticeScore[];
   /** false khi chưa có phiên: không có tiến độ nào để hiện. */
   canTrack: boolean;
 }) {
   const { data: progress } = useProgress(initialProgress);
   const completed = useMemo(() => completedSetOf(progress), [progress]);
+  const { data: scores } = useLessonScores(initialScores);
 
   const doneCount = lessons.filter((lesson) => completed.has(lesson.id)).length;
 
@@ -47,6 +53,7 @@ export function CourseLessons({
       <ol className="border-border bg-card divide-border divide-y rounded-xl border">
         {lessons.map((lesson, position) => {
           const done = completed.has(lesson.id);
+          const best = scoreOf(scores, lesson.id);
           return (
             <li key={lesson.id}>
               {/* Cả hàng là link: đích bấm to, và bấm vào đâu cũng là mở bài. */}
@@ -63,6 +70,14 @@ export function CourseLessons({
                 >
                   {lesson.title}
                 </span>
+                {best ? (
+                  <span
+                    className="text-muted-foreground bg-secondary rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums"
+                    title="Điểm luyện tập cao nhất"
+                  >
+                    {best.best_correct}/{best.total}
+                  </span>
+                ) : null}
                 <span aria-hidden className="text-muted-foreground text-sm">
                   →
                 </span>

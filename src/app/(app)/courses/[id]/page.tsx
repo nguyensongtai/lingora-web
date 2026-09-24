@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchCourse, fetchCourseLessons } from "@/features/course/api";
 import { CourseLessons } from "@/features/course/components/course-lessons";
 import { LEVEL_LABELS, STATUS_LABELS } from "@/features/course/types";
+import { readLessonScores } from "@/features/practice/server";
 import { readProgress } from "@/features/progress/server";
 import { handleMissing } from "@/lib/api/missing";
 import { readCurrentUser } from "@/lib/auth/current-user";
@@ -45,13 +46,14 @@ async function CourseDetail({
 }) {
   const { id } = await params;
 
-  // Bốn lời gọi độc lập nên chạy song song; 404 của khoá hay của bài đều là
+  // Năm lời gọi độc lập nên chạy song song; 404 của khoá hay của bài đều là
   // "khoá học không tồn tại".
-  const [course, lessons, progress, user] = await Promise.all([
+  const [course, lessons, progress, user, scores] = await Promise.all([
     fetchCourse(id).catch(handleMissing),
     fetchCourseLessons(id).catch(handleMissing),
     readProgress(),
     readCurrentUser(),
+    readLessonScores(),
   ]);
 
   return (
@@ -92,6 +94,7 @@ async function CourseDetail({
         <CourseLessons
           lessons={lessons.items}
           initialProgress={progress}
+          initialScores={scores}
           canTrack={user !== null}
         />
       </section>
