@@ -90,7 +90,6 @@ async function CourseDetail({
           </span>
         </h2>
         <CourseLessons
-          course={course}
           lessons={lessons.items}
           initialProgress={progress}
           canTrack={user !== null}

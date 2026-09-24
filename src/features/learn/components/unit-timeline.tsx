@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 
 import type { Course, Lesson } from "@/features/course/types";
 import { useProgress } from "@/features/progress/hooks/use-progress";
-import { useToggleLessonComplete } from "@/features/progress/hooks/use-toggle-lesson";
+import { LessonStatus } from "@/features/course/components/lesson-status";
 import { completedSetOf, type ProgressSnapshot } from "@/features/progress/types";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,7 @@ export function UnitTimeline({
 }: {
   units: Unit[];
   initialProgress: ProgressSnapshot;
-  /** false khi chưa đăng nhập: vẫn xem được lộ trình, chỉ không đánh dấu được. */
+  /** false khi chưa có phiên: không có tiến độ nào để hiện. */
   canTrack: boolean;
   level: string;
 }) {
@@ -32,7 +32,6 @@ export function UnitTimeline({
 
   const { data: progress } = useProgress(initialProgress);
   const completed = useMemo(() => completedSetOf(progress), [progress]);
-  const toggle = useToggleLessonComplete();
 
   const lessonCount = units.reduce((total, unit) => total + unit.lessons.length, 0);
   const doneTotal = units.reduce(
@@ -116,50 +115,21 @@ export function UnitTimeline({
                       {unit.lessons.map((lesson, position) => {
                         const done = completed.has(lesson.id);
                         return (
-                          <li
-                            key={lesson.id}
-                            className="flex min-h-14 items-center gap-3 rounded-lg px-2.5 py-2.5"
-                          >
-                            {canTrack ? (
-                              <button
-                                type="button"
-                                aria-pressed={done}
-                                aria-label={
-                                  done
-                                    ? `Bỏ đánh dấu "${lesson.title}"`
-                                    : `Đánh dấu đã học xong "${lesson.title}"`
-                                }
-                                onClick={() =>
-                                  toggle.mutate({
-                                    lessonId: lesson.id,
-                                    courseId: unit.course.id,
-                                    completed: !done,
-                                  })
-                                }
+                          <li key={lesson.id}>
+                            <Link
+                              href={`/lessons/${lesson.id}`}
+                              className="hover:bg-secondary/60 flex min-h-14 items-center gap-3 rounded-lg px-2.5 py-2.5 transition-colors"
+                            >
+                              <LessonStatus done={canTrack && done} position={position} />
+                              <span
                                 className={cn(
-                                  "grid size-6 flex-none place-items-center rounded-full border-2 transition-colors",
-                                  done
-                                    ? "bg-brand border-transparent text-white"
-                                    : "border-border hover:border-brand",
+                                  "min-w-0 flex-1 text-sm font-semibold",
+                                  done && canTrack && "text-muted-foreground",
                                 )}
                               >
-                                {done ? (
-                                  <Check className="size-3.5" strokeWidth={3} />
-                                ) : null}
-                              </button>
-                            ) : (
-                              <span className="border-border text-muted-foreground grid size-6 flex-none place-items-center rounded-full border-2 text-[11px] font-bold">
-                                {position + 1}
+                                {lesson.title}
                               </span>
-                            )}
-                            <span
-                              className={cn(
-                                "min-w-0 flex-1 text-sm font-semibold",
-                                done && "text-muted-foreground line-through",
-                              )}
-                            >
-                              {lesson.title}
-                            </span>
+                            </Link>
                           </li>
                         );
                       })}
