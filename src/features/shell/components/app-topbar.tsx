@@ -1,6 +1,8 @@
 "use client";
 
+import { UserRound } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -57,7 +59,14 @@ function Topbar({
 
 function MobileSignOut() {
   return (
-    <span className="app:hidden">
+    <span className="app:hidden flex items-center gap-1">
+      <Link
+        href="/account"
+        aria-label="Tài khoản"
+        className="hover:bg-secondary grid size-9 place-items-center rounded-lg transition-colors"
+      >
+        <UserRound className="size-5" />
+      </Link>
       <SignOutButton />
     </span>
   );

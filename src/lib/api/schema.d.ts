@@ -129,6 +129,30 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Sửa hồ sơ của chính mình */
+        patch: operations["updateCurrentUser"];
+        trace?: never;
+    };
+    "/auth/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Đổi mật khẩu
+         * @description Kiểm mật khẩu hiện tại (tối đa 5 lần sai mỗi 15 phút), đổi mật khẩu,
+         *     rồi thu hồi MỌI phiên — kể cả phiên đang gọi — và trả về một cặp token
+         *     mới cho chính thiết bị này. Mật khẩu hiện tại sai là 400 theo field
+         *     `current_password`, không phải 401: phiên vẫn còn hợp lệ.
+         */
+        put: operations["changePassword"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -587,8 +611,24 @@ export interface components {
             email: string;
             display_name: string;
             role: components["schemas"]["UserRole"];
+            /**
+             * @description Mục tiêu XP mỗi ngày.
+             * @enum {integer}
+             */
+            daily_goal_xp: 20 | 50 | 100;
+            /** @description false với tài khoản chỉ đăng nhập bằng Google — không có mật khẩu để đổi. */
+            has_password: boolean;
             /** Format: date-time */
             created_at: string;
+        };
+        UpdateMeRequest: {
+            display_name?: string;
+            /** @enum {integer} */
+            daily_goal_xp?: 20 | 50 | 100;
+        };
+        ChangePasswordRequest: {
+            current_password: string;
+            new_password: string;
         };
         RegisterRequest: {
             /** Format: email */
@@ -1276,6 +1316,68 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    updateCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMeRequest"];
+            };
+        };
+        responses: {
+            /** @description Hồ sơ sau khi sửa */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Cặp token mới */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Tài khoản chỉ đăng nhập bằng Google, không có mật khẩu để đổi. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
         };
     };
     listCourses: {

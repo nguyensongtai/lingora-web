@@ -31,6 +31,7 @@ export const PROTECTED_PREFIXES = [
   "/tutor",
   "/courses",
   "/lessons",
+  "/account",
 ];
 
 function isProtected(pathname: string): boolean {
@@ -122,8 +123,12 @@ export const config = {
     "/tutor",
     "/courses/:path*",
     "/lessons/:path*",
+    "/account",
     "/admin/:path*",
     "/api/admin/:path*",
     "/api/me/:path*",
+    // Sửa hồ sơ và đổi mật khẩu gọi API bằng access token trong cookie: không
+    // qua proxy thì token vừa hết hạn làm hai form đó báo lỗi thay vì tự gia hạn.
+    "/api/auth/me/:path*",
   ],
 };
