@@ -140,6 +140,18 @@ Id sai định dạng trong đường dẫn (400 của API) được gộp vào 
 trỏ tới bản ghi nào, nên với người vừa dán nhầm URL thì "không hợp lệ" và "không
 tồn tại" là cùng một chuyện.
 
+## Triển khai
+
+Web chạy trên Railway cùng project với API: build bằng `Dockerfile` (bản
+`standalone` của Next) theo `railway.json`, health check ở `/api/health` — cố
+ý không gọi API, để API hỏng không kéo theo web bị khởi động lại. Các bước và
+biến môi trường nằm ở README của lingora-api, mục "Triển khai lên Railway".
+
+`NEXT_PUBLIC_API_URL` và `NEXT_PUBLIC_SITE_URL` được nhúng vào bundle **lúc
+build**, nên đổi chúng phải build lại. `BFF_SHARED_SECRET` và
+`TRUSTED_PROXY_HEADER` là biến lúc chạy: nhờ chúng, route đăng nhập nói được
+với API IP thật của người đang đăng nhập.
+
 ## Xác thực
 
 Token **không bao giờ chạm tới JavaScript của trình duyệt.** Next giữ chúng
