@@ -52,13 +52,14 @@ phía server, và client secret thì hoàn toàn không có mặt trong repo nà
 | --- | --- | --- |
 | `/` | tất cả | khách thấy trang giới thiệu, người đã đăng nhập thấy màn hình học |
 | `/login` | tất cả | đăng nhập và tạo tài khoản chung một form |
-| `/learn` | đã đăng nhập | lộ trình theo bậc CEFR, đánh dấu bài đã xong |
-| `/vocabulary` | đã đăng nhập | hàng đợi ôn và flashcard |
-| `/practice` | đã đăng nhập | luyện lại vốn từ đã mở khoá |
+| `/learn` | đã đăng nhập | lộ trình theo bậc CEFR; bấm vào bài là mở bài |
+| `/vocabulary` | đã đăng nhập | hàng đợi ôn (tối đa 20 từ mới/ngày) và flashcard |
+| `/practice` | đã đăng nhập | luyện lại vốn từ đã mở khoá, năm dạng câu hỏi |
 | `/progress` | đã đăng nhập | XP, chuỗi ngày, biểu đồ 30 ngày, tiến độ từng bậc |
 | `/tutor` | đã đăng nhập | **màn hình tạm**, xem ghi chú bên dưới |
 | `/courses` `/courses/[id]` | đã đăng nhập | danh mục khoá học và danh sách bài |
 | `/lessons/[id]` | đã đăng nhập | **học một bài theo bước**: Từ vựng → Hội thoại → Cách dùng → Luyện tập |
+| `/account` | đã đăng nhập | tên hiển thị, mục tiêu XP mỗi ngày, đổi mật khẩu |
 | `/admin/**` | role `admin` | soạn khoá, bài và từ vựng |
 | `/api/**` | tuỳ route | Route Handler của BFF, xem [Xác thực](#xác-thực) |
 
@@ -71,6 +72,15 @@ vẽ, vì chưa có mô hình dữ liệu nào cho nó.
 nào để soạn. Chấm ở server, không so chuỗi ở client: client có sẵn đáp án trong
 DOM, và server còn phải biết câu sai để đẩy từ về hàng đợi ôn. Trả lời đúng
 **không** đổi lịch ôn; chỉ câu sai mới phạt.
+
+Năm dạng câu hỏi: chọn nghĩa, điền từ vào câu, nghe rồi chọn, **nghe rồi viết
+từ**, và **chép chính tả cả câu**. Ba dạng nghe đọc `question.speak` bằng
+`speechSynthesis` và không bao giờ hiện nó ra; mỗi dạng có nút "Nghe chậm"
+(0.6x) vì chép cả câu ở tốc độ thường là quá sức với người mới.
+
+Danh sách bài ở `/learn` và trang khoá chỉ còn là **link vào bài**. Dấu tròn cạnh
+tên bài chỉ báo trạng thái: nó từng là nút đánh dấu xong, nằm cạnh một tên bài
+không bấm được, nên thao tác dễ nhất là tick cả khoá lấy XP mà chưa mở bài nào.
 
 ### Một bài học đi theo bước
 
@@ -95,6 +105,15 @@ nó ở bước Từ vựng.
 Mọi bước được render sẵn và chỉ ẩn đi: người đang luyện tập quay về bước Từ vựng
 tra một từ thì lượt luyện còn nguyên khi quay lại. Nhảy tới bước nào cũng được,
 và "Đã xong" vẫn là người học tự bấm, không gắn với việc đi hết các bước.
+
+Bước đang học nằm trên URL (`#tu-vung`, `#hoi-thoai`, `#cach-dung`,
+`#luyen-tap`), đọc bằng `useSyncExternalStore` vì server không thấy hash: tải
+lại trang hay gửi link vẫn mở đúng bước. Đổi bước dùng `replaceState`, nên Back
+là rời bài chứ không lùi qua từng bước.
+
+Xong một lượt luyện trong bài thì điểm được lưu (chỉ giữ điểm cao nhất, **không
+cộng XP**) và hiện ở cuối lượt, trên câu đầu của lượt sau, và cạnh tên bài ở
+trang khoá. Cả ba đọc chung một query.
 
 Luyện tập trong bài gọi cùng endpoint với `/practice` nhưng kèm `lesson_id`, và
 **không đụng tới lịch ôn**. `PracticeScope` (`review` | `lesson`) đi xuyên từ
