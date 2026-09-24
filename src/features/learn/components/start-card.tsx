@@ -64,13 +64,24 @@ export function StartCard({
       ) : null}
 
       <div className="flex flex-wrap gap-2.5">
+        {/* Nút chính đưa thẳng vào bài: thẻ đã nói tên bài tiếp theo, bắt
+            người học mở khoá rồi tìm lại đúng bài đó là một lần bấm thừa ở
+            chính nút quan trọng nhất của app. Khoá đã xong hết thì mới mở khoá. */}
         <Link
-          href={`/courses/${course.id}`}
+          href={nextLesson ? `/lessons/${nextLesson.id}` : `/courses/${course.id}`}
           className="bg-brand inline-flex h-11 items-center gap-2 rounded-lg px-5 text-sm font-semibold text-white"
         >
-          Mở khoá học
+          {nextLesson ? (started ? "Học tiếp" : "Bắt đầu học") : "Xem lại khoá học"}
           <ArrowRight className="size-4" />
         </Link>
+        {nextLesson ? (
+          <Link
+            href={`/courses/${course.id}`}
+            className="hover:bg-secondary inline-flex h-11 items-center rounded-lg px-4 text-sm font-semibold transition-colors"
+          >
+            Mở khoá học
+          </Link>
+        ) : null}
         <Link
           href={{ pathname: "/learn", query: { level: course.level } }}
           className="hover:bg-secondary inline-flex h-11 items-center rounded-lg px-4 text-sm font-semibold transition-colors"
